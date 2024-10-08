@@ -7,6 +7,7 @@ import javafx.scene.control.*;
 import javafx.scene.layout.GridPane;
 import javafx.stage.Stage;
 
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -16,6 +17,10 @@ public class HelpSystemApp extends Application {
     private Map<String, String> invitationCodes = new HashMap<>(); // Stores codes
     private boolean isFirstUser = true; // Track if the first user is being created
     private User currentUser; // Store current logged-in user
+
+    // Maps for reset tokens and expiration
+    private Map<String, String> resetTokens = new HashMap<>(); // Username -> One-time password for reset
+    private Map<String, LocalDateTime> resetExpiration = new HashMap<>(); // Username -> Expiration time of the reset password
 
     @Override
     public void start(Stage primaryStage) {
@@ -62,7 +67,11 @@ public class HelpSystemApp extends Application {
             if (user != null && user.getPassword().equals(password)) {
                 System.out.println("Login successful!");
                 currentUser = user;
-                showAccountSetup(primaryStage);
+                if (currentUser.getRoles().contains("ADMIN")) {
+                    showAdminDashboard(primaryStage); // Show Admin Dashboard
+                } else {
+                    showAccountSetup(primaryStage);
+                }
             } else {
                 System.out.println("Invalid username or password.");
             }
@@ -152,6 +161,8 @@ public class HelpSystemApp extends Application {
             currentUser.setLastName(lastNameInput.getText());
             currentUser.setPreferredFirstName(preferredNameInput.getText());
             System.out.println("Account setup completed!");
+
+            // After setup, check roles and redirect accordingly
             showRoleSelection(primaryStage);
         });
 
@@ -163,8 +174,10 @@ public class HelpSystemApp extends Application {
     // Scene for Role Selection
     private void showRoleSelection(Stage primaryStage) {
         if (currentUser.getRoles().size() == 1) {
-            System.out.println("Redirecting to role-specific page...");
+            String selectedRole = currentUser.getRoles().get(0);
+            System.out.println("Redirecting to role-specific page for role: " + selectedRole);
             // Logic to redirect user based on the single role
+            showRoleSpecificPage(primaryStage, selectedRole);
         } else {
             GridPane roleGrid = new GridPane();
             roleGrid.setPadding(new Insets(10, 10, 10, 10));
@@ -183,6 +196,7 @@ public class HelpSystemApp extends Application {
                 String selectedRole = roleSelect.getValue();
                 System.out.println("User selected role: " + selectedRole);
                 // Redirect to role-specific page
+                showRoleSpecificPage(primaryStage, selectedRole);
             });
 
             roleGrid.getChildren().addAll(roleLabel, roleSelect, proceedButton);
@@ -191,7 +205,173 @@ public class HelpSystemApp extends Application {
         }
     }
 
+    // Admin Dashboard to manage users
+    private void showAdminDashboard(Stage primaryStage) {
+        GridPane adminGrid = new GridPane();
+        adminGrid.setPadding(new Insets(10, 10, 10, 10));
+        adminGrid.setVgap(8);
+        adminGrid.setHgap(10);
+
+        Label welcomeLabel = new Label("Admin Dashboard");
+        GridPane.setConstraints(welcomeLabel, 0, 0);
+
+        // Button to invite new users
+        Button inviteUserButton = new Button("Invite New User");
+        GridPane.setConstraints(inviteUserButton, 0, 1);
+        inviteUserButton.setOnAction(e -> showInviteUserDialog());
+
+        // Button to reset user account
+        Button resetUserButton = new Button("Reset User Account");
+        GridPane.setConstraints(resetUserButton, 0, 2);
+        resetUserButton.setOnAction(e -> showResetUserDialog());
+
+        // Button to delete user account
+        Button deleteUserButton = new Button("Delete User Account");
+        GridPane.setConstraints(deleteUserButton, 0, 3);
+        deleteUserButton.setOnAction(e -> showDeleteUserDialog());
+
+        // Button to list user accounts
+        Button listUsersButton = new Button("List User Accounts");
+        GridPane.setConstraints(listUsersButton, 0, 4);
+        listUsersButton.setOnAction(e -> listUsers());
+
+        adminGrid.getChildren().addAll(welcomeLabel, inviteUserButton, resetUserButton, deleteUserButton, listUsersButton);
+
+        Scene adminScene = new Scene(adminGrid, 400, 300);
+        primaryStage.setScene(adminScene);
+    }
+
+    // Show dialog for inviting a new user
+    private void showInviteUserDialog() {
+        Stage dialogStage = new Stage();
+        dialogStage.setTitle("Invite New User");
+
+        GridPane inviteGrid = new GridPane();
+        inviteGrid.setPadding(new Insets(10, 10, 10, 10));
+        inviteGrid.setVgap(8);
+        inviteGrid.setHgap(10);
+
+        Label usernameLabel = new Label("Username:");
+        GridPane.setConstraints(usernameLabel, 0, 0);
+        TextField usernameInput = new TextField();
+        GridPane.setConstraints(usernameInput, 1, 0);
+
+        Label roleLabel = new Label("Role (ADMIN, STUDENT, INSTRUCTOR):");
+        GridPane.setConstraints(roleLabel, 0, 1);
+        TextField roleInput = new TextField();
+        GridPane.setConstraints(roleInput, 1, 1);
+
+        Button sendButton = new Button("Send Invitation");
+        GridPane.setConstraints(sendButton, 1, 2);
+        sendButton.setOnAction(e -> {
+            String invitationCode = usernameInput.getText(); // Use username as invitation code
+            String role = roleInput.getText();
+            invitationCodes.put(invitationCode, role); // Store invitation code with role
+            System.out.println("Invitation sent to " + invitationCode + " for role: " + role);
+            dialogStage.close();
+        });
+
+        inviteGrid.getChildren().addAll(usernameLabel, usernameInput, roleLabel, roleInput, sendButton);
+
+        Scene dialogScene = new Scene(inviteGrid, 300, 200);
+        dialogStage.setScene(dialogScene);
+        dialogStage.show();
+    }
+
+    // Show dialog for resetting a user account
+    private void showResetUserDialog() {
+        Stage dialogStage = new Stage();
+        dialogStage.setTitle("Reset User Account");
+
+        GridPane resetGrid = new GridPane();
+        resetGrid.setPadding(new Insets(10, 10, 10, 10));
+        resetGrid.setVgap(8);
+        resetGrid.setHgap(10);
+
+        Label usernameLabel = new Label("Username:");
+        GridPane.setConstraints(usernameLabel, 0, 0);
+        TextField usernameInput = new TextField();
+        GridPane.setConstraints(usernameInput, 1, 0);
+
+        Button resetButton = new Button("Reset Password");
+        GridPane.setConstraints(resetButton, 1, 1);
+        resetButton.setOnAction(e -> {
+            String username = usernameInput.getText();
+            User user = userAccounts.get(username);
+            if (user != null) {
+                String resetToken = generateResetToken(); // Create a token
+                resetTokens.put(username, resetToken);
+                resetExpiration.put(username, LocalDateTime.now().plusMinutes(10)); // Token expires in 10 minutes
+                System.out.println("Reset token generated for " + username + ": " + resetToken);
+            } else {
+                System.out.println("User not found.");
+            }
+            dialogStage.close();
+        });
+
+        resetGrid.getChildren().addAll(usernameLabel, usernameInput, resetButton);
+
+        Scene dialogScene = new Scene(resetGrid, 300, 150);
+        dialogStage.setScene(dialogScene);
+        dialogStage.show();
+    }
+
+    // Show dialog for deleting a user account
+    private void showDeleteUserDialog() {
+        Stage dialogStage = new Stage();
+        dialogStage.setTitle("Delete User Account");
+
+        GridPane deleteGrid = new GridPane();
+        deleteGrid.setPadding(new Insets(10, 10, 10, 10));
+        deleteGrid.setVgap(8);
+        deleteGrid.setHgap(10);
+
+        Label usernameLabel = new Label("Username:");
+        GridPane.setConstraints(usernameLabel, 0, 0);
+        TextField usernameInput = new TextField();
+        GridPane.setConstraints(usernameInput, 1, 0);
+
+        Button deleteButton = new Button("Delete User");
+        GridPane.setConstraints(deleteButton, 1, 1);
+        deleteButton.setOnAction(e -> {
+            String username = usernameInput.getText();
+            if (userAccounts.remove(username) != null) {
+                System.out.println("User " + username + " deleted successfully.");
+            } else {
+                System.out.println("User not found.");
+            }
+            dialogStage.close();
+        });
+
+        deleteGrid.getChildren().addAll(usernameLabel, usernameInput, deleteButton);
+
+        Scene dialogScene = new Scene(deleteGrid, 300, 150);
+        dialogStage.setScene(dialogScene);
+        dialogStage.show();
+    }
+
+    // List all user accounts
+    private void listUsers() {
+        System.out.println("Current Users:");
+        for (String username : userAccounts.keySet()) {
+            System.out.println(" - " + username + " with roles: " + userAccounts.get(username).getRoles());
+        }
+    }
+
+    // Method to generate a reset token (simple example)
+    private String generateResetToken() {
+        return Long.toHexString(Double.doubleToLongBits(Math.random()));
+    }
+
+    // Method to show the role-specific page
+    private void showRoleSpecificPage(Stage primaryStage, String role) {
+        // Logic to show role-specific page
+        System.out.println("Redirecting to role-specific page for role: " + role);
+    }
+
     public static void main(String[] args) {
         launch(args);
     }
 }
+
+

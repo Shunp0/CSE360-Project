@@ -11,117 +11,140 @@ import java.util.List;
 
 public class AdminDashboard extends Application {
 
-    // Mock UserService to simulate interaction with user management backend
     private UserService userService = new UserService();
 
     @Override
     public void start(Stage primaryStage) {
         primaryStage.setTitle("Admin Dashboard");
 
-        // Layout for the dashboard
         VBox root = new VBox(10);
         root.setPadding(new Insets(10));
 
-        // Section: Invite User
-        Label inviteUserLabel = new Label("Invite New User");
+        // Login Page
+        Label loginLabel = new Label("Login");
         TextField usernameField = new TextField();
         usernameField.setPromptText("Enter Username");
-        ChoiceBox<String> roleChoiceBox = new ChoiceBox<>();
-        roleChoiceBox.getItems().addAll("Admin", "Instructor", "Student");
-        Button inviteUserButton = new Button("Generate Invitation Code");
+        PasswordField passwordField = new PasswordField();
+        passwordField.setPromptText("Enter Password");
+        Button loginButton = new Button("Login");
+        Button inviteButton = new Button("Use Invitation Code");
 
-        // Event: Generate invitation code
-        inviteUserButton.setOnAction(e -> {
+        // Event Handling for Login
+        loginButton.setOnAction(e -> {
             String username = usernameField.getText();
-            String role = roleChoiceBox.getValue();
-            if (username.isEmpty() || role == null) {
-                showAlert(Alert.AlertType.ERROR, "Error", "Username and role must be provided.");
-            } else {
-                String invitationCode = userService.inviteUser(username, role);
-                showAlert(Alert.AlertType.INFORMATION, "Invitation Code Generated", "Code: " + invitationCode);
-            }
-        });
-
-        // Section: Reset User Password
-        Label resetPasswordLabel = new Label("Reset User Password");
-        TextField resetUsernameField = new TextField();
-        resetUsernameField.setPromptText("Enter Username");
-        Button resetPasswordButton = new Button("Reset Password");
-
-        // Event: Reset password
-        resetPasswordButton.setOnAction(e -> {
-            String username = resetUsernameField.getText();
-            if (username.isEmpty()) {
-                showAlert(Alert.AlertType.ERROR, "Error", "Username must be provided.");
-            } else {
-                userService.resetUserPassword(username);
-                showAlert(Alert.AlertType.INFORMATION, "Password Reset", "A one-time password has been sent to the user.");
-            }
-        });
-
-        // Section: Delete User
-        Label deleteUserLabel = new Label("Delete User");
-        TextField deleteUsernameField = new TextField();
-        deleteUsernameField.setPromptText("Enter Username");
-        Button deleteUserButton = new Button("Delete User");
-
-        // Event: Delete user
-        deleteUserButton.setOnAction(e -> {
-            String username = deleteUsernameField.getText();
-            if (username.isEmpty()) {
-                showAlert(Alert.AlertType.ERROR, "Error", "Username must be provided.");
-            } else {
-                boolean confirmDelete = confirmDelete();
-                if (confirmDelete) {
-                    userService.deleteUser(username);
-                    showAlert(Alert.AlertType.INFORMATION, "User Deleted", "User " + username + " has been deleted.");
+            String password = passwordField.getText();
+            if (userService.validateUser(username, password)) {
+                User user = userService.getUserByUsername(username);
+                if (user.isFirstTimeSetup()) {
+                    showAccountSetup(user);
+                } else {
+                    if (user.getRoles().size() > 1) {
+                        showRoleSelection(user);
+                    } else {
+                        showHomePage(user.getRoles().get(0));
+                    }
                 }
+            } else {
+                showAlert(Alert.AlertType.ERROR, "Error", "Invalid username or password.");
             }
         });
 
-        // Section: List Users
-        Label listUsersLabel = new Label("List of Users");
-        Button listUsersButton = new Button("List Users");
-        TextArea userListArea = new TextArea();
-        userListArea.setEditable(false);
-
-        // Event: List users
-        listUsersButton.setOnAction(e -> {
-            List<User> users = userService.listUsers();
-            StringBuilder userListText = new StringBuilder("Username\tRoles\n");
-            for (User user : users) {
-                userListText.append(user.getUsername()).append("\t").append(user.getRoles()).append("\n");
-            }
-            userListArea.setText(userListText.toString());
+        // Event Handling for Invitation Code
+        inviteButton.setOnAction(e -> {
+            // Handle invitation code logic
         });
 
-        // Add components to layout
         root.getChildren().addAll(
-                inviteUserLabel, usernameField, roleChoiceBox, inviteUserButton,
-                resetPasswordLabel, resetUsernameField, resetPasswordButton,
-                deleteUserLabel, deleteUsernameField, deleteUserButton,
-                listUsersLabel, listUsersButton, userListArea
+                loginLabel, usernameField, passwordField, loginButton, inviteButton
         );
 
-        Scene scene = new Scene(root, 400, 600);
+        Scene scene = new Scene(root, 400, 400);
         primaryStage.setScene(scene);
         primaryStage.show();
     }
 
-    // Method to show alerts
+    private void showAccountSetup(User user) {
+        Stage setupStage = new Stage();
+        VBox setupRoot = new VBox(10);
+        setupRoot.setPadding(new Insets(10));
+
+        Label setupLabel = new Label("Finish Setting Up Your Account");
+        TextField emailField = new TextField();
+        emailField.setPromptText("Enter Email");
+        TextField firstNameField = new TextField();
+        firstNameField.setPromptText("Enter First Name");
+        TextField middleNameField = new TextField();
+        middleNameField.setPromptText("Enter Middle Name (Optional)");
+        TextField lastNameField = new TextField();
+        lastNameField.setPromptText("Enter Last Name");
+        TextField preferredFirstNameField = new TextField();
+        preferredFirstNameField.setPromptText("Enter Preferred First Name (Optional)");
+        Button completeButton = new Button("Complete Setup");
+
+        completeButton.setOnAction(e -> {
+            String email = emailField.getText();
+            String firstName = firstNameField.getText();
+            String middleName = middleNameField.getText();
+            String lastName = lastNameField.getText();
+            String preferredFirstName = preferredFirstNameField.getText();
+
+            user.setEmail(email);
+            user.setFirstName(firstName);
+            user.setMiddleName(middleName);
+            user.setLastName(lastName);
+            user.setPreferredFirstName(preferredFirstName);
+            user.setFirstTimeSetup(false);
+            showAlert(Alert.AlertType.INFORMATION, "Setup Complete", "Your account has been set up. Please log in again.");
+
+            setupStage.close(); // Close setup window
+        });
+
+        setupRoot.getChildren().addAll(
+                setupLabel, emailField, firstNameField, middleNameField, lastNameField, preferredFirstNameField, completeButton
+        );
+
+        Scene setupScene = new Scene(setupRoot, 400, 400);
+        setupStage.setScene(setupScene);
+        setupStage.show();
+    }
+
+    private void showRoleSelection(User user) {
+        Stage roleStage = new Stage();
+        VBox roleRoot = new VBox(10);
+        roleRoot.setPadding(new Insets(10));
+
+        Label roleLabel = new Label("Select Role for this Session");
+        ChoiceBox<String> roleChoiceBox = new ChoiceBox<>();
+        roleChoiceBox.getItems().addAll(user.getRoles());
+        Button proceedButton = new Button("Proceed");
+
+        proceedButton.setOnAction(e -> {
+            String selectedRole = roleChoiceBox.getValue();
+            if (selectedRole != null) {
+                showHomePage(selectedRole);
+                roleStage.close(); // Close role selection window
+            } else {
+                showAlert(Alert.AlertType.ERROR, "Error", "Please select a role.");
+            }
+        });
+
+        roleRoot.getChildren().addAll(roleLabel, roleChoiceBox, proceedButton);
+        Scene roleScene = new Scene(roleRoot, 300, 200);
+        roleStage.setScene(roleScene);
+        roleStage.show();
+    }
+
+    private void showHomePage(String role) {
+        // Implement the home page for the role
+        System.out.println("Welcome to the " + role + " home page!"); // Placeholder for role home page
+    }
+
     private void showAlert(Alert.AlertType alertType, String title, String message) {
         Alert alert = new Alert(alertType);
         alert.setTitle(title);
+        alert.setHeaderText(null);
         alert.setContentText(message);
         alert.showAndWait();
-    }
-
-    // Method to confirm deletion
-    private boolean confirmDelete() {
-        Alert alert = new Alert(Alert.AlertType.CONFIRMATION, "Are you sure you want to delete this user?", ButtonType.YES, ButtonType.NO);
-        alert.setTitle("Confirm Deletion");
-        alert.showAndWait();
-        return alert.getResult() == ButtonType.YES;
     }
 
     public static void main(String[] args) {

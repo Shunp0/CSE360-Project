@@ -1,6 +1,5 @@
 package application;
 
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -13,9 +12,7 @@ public class User {
     private String lastName; // User's last name
     private String preferredFirstName; // Optional preferred first name
     private List<String> roles; // List of roles assigned to the user
-    private boolean oneTimePassword; // Flag for one-time password usage
-    private byte[] passwordHash; // To store hashed password
-    private LocalDateTime oneTimePasswordExpiry; // Expiry time for one-time password
+    private boolean firstTimeSetup; // Flag to check if the user needs to finish setup
 
     // Default constructor
     public User() {
@@ -27,28 +24,18 @@ public class User {
         this.lastName = "";
         this.preferredFirstName = "";
         this.roles = new ArrayList<>();
-        this.oneTimePassword = false;
-        this.passwordHash = null; // Initialize with null
-        this.oneTimePasswordExpiry = null; // Initialize with null
+        this.firstTimeSetup = true; // Default to true for new users
     }
-
-    // Constructor for user creation with role assignment
+    
     public User(String username, String password, String role) {
         this.username = username;
-        this.password = password; // In a real application, this should be hashed
-        this.email = "";
-        this.firstName = "";
-        this.middleName = "";
-        this.lastName = "";
-        this.preferredFirstName = "";
+        this.password = password;
         this.roles = new ArrayList<>();
-        this.roles.add(role); // Assign role upon creation
-        this.oneTimePassword = false;
-        this.passwordHash = null;
-        this.oneTimePasswordExpiry = null;
+        this.roles.add(role); // Add initial role
     }
 
-    // Full constructor for user creation with all details
+
+    // Constructor with parameters
     public User(String username, String password, String email, String firstName, String middleName, String lastName, String preferredFirstName) {
         this.username = username;
         this.password = password; // In a real application, this should be hashed
@@ -58,12 +45,10 @@ public class User {
         this.lastName = lastName;
         this.preferredFirstName = preferredFirstName;
         this.roles = new ArrayList<>();
-        this.oneTimePassword = false;
-        this.passwordHash = null;
-        this.oneTimePasswordExpiry = null;
+        this.firstTimeSetup = true; // Default to true for new users
     }
 
-    // Getters and Setters for user details
+    // Getters and Setters
     public String getUsername() {
         return username;
     }
@@ -73,11 +58,11 @@ public class User {
     }
 
     public String getPassword() {
-        return password; // In a real application, do not expose plaintext passwords
+        return password;
     }
 
     public void setPassword(String password) {
-        this.password = password; // Hash the password before saving in production
+        this.password = password; // In a real application, this should be hashed
     }
 
     public String getEmail() {
@@ -134,35 +119,20 @@ public class User {
         roles.remove(role);
     }
 
-    public boolean isOneTimePassword() {
-        return oneTimePassword;
+    public boolean isFirstTimeSetup() {
+        return firstTimeSetup;
     }
 
-    public void setOneTimePassword(boolean oneTimePassword) {
-        this.oneTimePassword = oneTimePassword;
+    public void setFirstTimeSetup(boolean firstTimeSetup) {
+        this.firstTimeSetup = firstTimeSetup;
     }
 
-    public byte[] getPasswordHash() {
-        return passwordHash;
-    }
-
-    public void setPasswordHash(byte[] passwordHash) {
-        this.passwordHash = passwordHash;
-    }
-
-    public LocalDateTime getOneTimePasswordExpiry() {
-        return oneTimePasswordExpiry;
-    }
-
-    public void setOneTimePasswordExpiry(LocalDateTime oneTimePasswordExpiry) {
-        this.oneTimePasswordExpiry = oneTimePasswordExpiry;
-    }
-
-    // Method to return the full name of the user, using preferred first name if available
     public String getFullName() {
-        if (preferredFirstName != null && !preferredFirstName.isEmpty()) {
-            return preferredFirstName + " " + lastName;
-        }
-        return firstName + " " + lastName;
+        return (preferredFirstName != null && !preferredFirstName.isEmpty() ? preferredFirstName : firstName) + " " +
+               (middleName != null && !middleName.isEmpty() ? middleName + " " : "") + lastName;
+    }
+
+    public boolean hasRole(String role) {
+        return roles.contains(role);
     }
 }
