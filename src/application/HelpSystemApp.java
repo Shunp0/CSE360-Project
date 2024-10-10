@@ -347,6 +347,7 @@ private void showInviteUserDialog() {
 private void showResetUserDialog() {
     Stage dialogStage = new Stage();
     dialogStage.setTitle("Reset User Account"); // Set the title for the dialog
+    
     // Create a grid for the reset dialog
     GridPane resetGrid = new GridPane();
     resetGrid.setPadding(new Insets(10, 10, 10, 10)); // Padding
@@ -365,26 +366,44 @@ private void showResetUserDialog() {
     resetButton.setOnAction(e -> {
         String username = usernameInput.getText(); // Get the entered username
         User user = userAccounts.get(username); // Check if the user exists
-            if (user != null) {
-            // Generate a reset token and set expiration for 10 minutes
-                String resetToken = generateResetToken(); // Generate the token
-                resetTokens.put(username, resetToken); // Store the token for the user
-                resetExpiration.put(username, LocalDateTime.now().plusMinutes(10)); // Token valid for 10 minutes
-                System.out.println("Reset token generated for " + username + ": " + resetToken); // Display the token
-            } else {
-            // If the user isn't found, print an error message
+
+        if (user != null) {
+            // Generate a one-time password and set expiration for 10 minutes
+            String oneTimePassword = generateOneTimePassword(); // Generate the OTP
+            user.setOtp(oneTimePassword);
+            LocalDateTime expiryTime = LocalDateTime.now().plusMinutes(10); // Set expiration time
+            user.setPassword(oneTimePassword);
+            user.setOneTimePassword(true); // Mark the user as having a valid OTP
+            user.setOneTimePasswordExpiry(expiryTime); // Set the expiration time
+            
+
+            // Notify the admin that the OTP has been set (in a real application, you might send an email)
+            System.out.println("One-Time Password for " + username + ": " + oneTimePassword);
+            System.out.println("This OTP expires at: " + expiryTime);
+        } else {
             System.out.println("User not found.");
         }
 
         dialogStage.close(); // Close the dialog when done
     });
+    
     // Add all the components to the grid
     resetGrid.getChildren().addAll(usernameLabel, usernameInput, resetButton);
+    
     // Set up the scene for the reset dialog
     Scene dialogScene = new Scene(resetGrid, 300, 150); // Set size for the dialog
     dialogStage.setScene(dialogScene); // Display the scene
     dialogStage.show(); // Show the dialog
 }
+
+// Helper method to generate a one-time password
+private String generateOneTimePassword() {
+    // Simple example of generating a random 6-digit OTP
+    return String.valueOf((int)(Math.random() * 900000) + 100000); // Generates a number between 100000 and 999999
+}
+
+
+
     // Show dialog for deleting a user account
 private void showDeleteUserDialog() {
     Stage dialogStage = new Stage();
@@ -592,7 +611,7 @@ private void showManageUsersPage(Stage primaryStage) {
     Scene scene = new Scene(layout, 300, 200); // Set size for the role editing window
     editUserRoleStage.setScene(scene); // Set the scene
     editUserRoleStage.show(); // Show the stage
-
+ }
 // Instructor Home Page
     private void showInstructorHomePage(Stage primaryStage) {
         Stage instructorHomeStage = new Stage();
@@ -616,67 +635,35 @@ private void showManageUsersPage(Stage primaryStage) {
     }
 
 
-    // Admin Home Page
-    private void showAdminHomePage(Stage primaryStage) {
-        GridPane adminGrid = new GridPane();
-        adminGrid.setPadding(new Insets(10, 10, 10, 10)); // Padding
-        adminGrid.setVgap(8); // Vertical
-        adminGrid.setHgap(10); // Horizontal
-
-        Label welcomeLabel = new Label("Admin Dashboard");
-        GridPane.setConstraints(welcomeLabel, 0, 0);
-
-        // Button to invite new users
-        Button inviteUserButton = new Button("Invite New User");
-        GridPane.setConstraints(inviteUserButton, 0, 1);
-        inviteUserButton.setOnAction(e -> showInviteUserDialog()); // Open invite user dialog
-
-        // Button to reset user accounts
-        Button resetUserButton = new Button("Reset User Account");
-        GridPane.setConstraints(resetUserButton, 0, 2);
-        resetUserButton.setOnAction(e -> showResetUserDialog()); // Open reset user
-
-        // Button to delete user accounts
-        Button deleteUserButton = new Button("Delete User Account");
-        GridPane.setConstraints(deleteUserButton, 0, 3);
-        deleteUserButton.setOnAction(e -> showDeleteUserDialog()); // Open delete user
-
-        // Button to manage users
-        Button manageUsersButton = new Button("Manage Users");
-        manageUsersButton.setOnAction(e -> showManageUsersPage(primaryStage)); // Open manage users page
-        
-    // Button to list all user accounts
-    Button listUsersButton = new Button("List User Accounts");
-    GridPane.setConstraints(listUsersButton, 0, 4);
-    listUsersButton.setOnAction(e -> listUsers()); // List all users
-
-    // Logout button to exit the admin session
-    Button logoutButton = new Button("Logout");
-    GridPane.setConstraints(logoutButton, 0, 5);
-    logoutButton.setOnAction(e -> {
-        currentUser = null; // Clear the current user
-        start(primaryStage); // Redirect back to the login page
-});
-
-// Add buttons and labels to the grid
-adminGrid.getChildren().add(logoutButton); // Add the logout button to the grid
-adminGrid.getChildren().addAll(welcomeLabel, inviteUserButton, resetUserButton, deleteUserButton, listUsersButton,manageUsersButton);
-// Set up and display the admin page
-Scene adminScene = new Scene(adminGrid, 400, 300);
-primaryStage.setScene(adminScene);
-primaryStage.setTitle("Admin Home Page");
-
-VBox layout = new VBox(10); // Layout with spacing
-layout.setPadding(new Insets(20, 20, 20, 20)); // Add padding
-
-// Logout action to close window and return to login
-logoutButton.setOnAction(e -> {
-    primaryStage.close();
-    start(primaryStage); // Back to login
-});
-
-
     private void handleLogin(User user, Stage primaryStage) {
+    if (user.isOneTimePassword()) {
+        Stage dialogStage = new Stage();
+        dialogStage.setTitle("Create New Password"); // Sets the title
+        GridPane inviteGrid = new GridPane();
+        inviteGrid.setPadding(new Insets(10, 10, 10, 10)); // Padding
+        inviteGrid.setVgap(8); // Vertical
+        inviteGrid.setHgap(10); // Horizontal
+        Label roleLabel = new Label("New Password:");
+        GridPane.setConstraints(roleLabel, 0, 0);
+        TextField roleInput = new TextField();
+        GridPane.setConstraints(roleInput, 1, 0);
+        Button generateButton = new Button("Confirm New Password"); // Add generate code button
+        GridPane.setConstraints(generateButton, 1, 2);
+        generateButton.setOnAction(e -> {
+            String role = roleInput.getText();
+            user.setPassword(role);
+            user.setOneTimePassword(false);
+            primaryStage.close(); // Close the current window
+            start(primaryStage);
+        });
+        // Add everything to the layout
+        inviteGrid.getChildren().addAll(roleLabel, roleInput, generateButton);
+        // Set up the scene and display it
+        Scene scene = new Scene(inviteGrid, 400, 300); // Set size
+        dialogStage.setScene(scene); // Set the scene on the stage
+        dialogStage.show(); // Show stage
+    }
+    else
     if (user.getRoles().size() == 1) {
         // Single role: redirect to the appropriate home page
         redirectToRoleHomePage(user.getRoles().get(0), primaryStage);
@@ -783,5 +770,4 @@ private void showRoleSpecificPage(Stage primaryStage, String role) {
 public static void main(String[] args) {
     launch(args); // Start
 }
-
-
+}
