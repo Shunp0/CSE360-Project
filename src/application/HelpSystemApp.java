@@ -1,7 +1,6 @@
 package application;
 
 import javafx.application.Application;
-import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
@@ -81,7 +80,7 @@ public class HelpSystemApp extends Application {
                         showAccountSetup(primaryStage); // Show account setup only if not completed
                     } else {
                         // Redirect to the user's home page if account setup is completed
-                    	redirectToRoleHomePage(currentUser.getRoles().get(0), primaryStage); // Assuming at least one role exists
+                    	handleLogin(currentUser, primaryStage); // Assuming at least one role exists
                     }
                 }
             } else {
@@ -176,6 +175,7 @@ public class HelpSystemApp extends Application {
             System.out.println("Account setup completed!");
 
             // After setup, check roles and redirect accordingly
+            currentUser.setAccountSetupCompleted(true);
             showRoleSelection(primaryStage);
         });
 
@@ -391,15 +391,6 @@ public class HelpSystemApp extends Application {
         Scene dialogScene = new Scene(deleteGrid, 300, 150);
         dialogStage.setScene(dialogScene);
         dialogStage.show();
-    }
- // Add a role to a user
-    private void addRoleToUser(User user, String role) {
-        if (!user.getRoles().contains(role)) {
-            user.addRole(role);
-            System.out.println("Role " + role + " added to user: " + user.getUsername());
-        } else {
-            System.out.println("User already has this role.");
-        }
     }
  // Student Home Page
     private void showStudentHomePage(Stage primaryStage) {
@@ -702,32 +693,23 @@ public class HelpSystemApp extends Application {
 
     // Redirect to the appropriate home page based on the role
     private void redirectToRoleHomePage(String role, Stage primaryStage) {
-        switch (role) {
+        String normalizedRole = role.toUpperCase(); // Normalize the role
+
+        switch (normalizedRole) {
             case "STUDENT":
-                showStudentHomePage(primaryStage); // Pass primaryStage to the method
+                showStudentHomePage(primaryStage);
                 break;
             case "INSTRUCTOR":
-                showInstructorHomePage(primaryStage); // Pass primaryStage to the method
+                showInstructorHomePage(primaryStage);
                 break;
             case "ADMIN":
-                showAdminHomePage(primaryStage); // Pass primaryStage to the method
+                showAdminHomePage(primaryStage);
                 break;
             default:
                 System.out.println("Unknown role: " + role);
         }
     }
 
-
-
-    // Remove a role from a user
-    private void removeRoleFromUser(User user, String role) {
-        if (user.getRoles().contains(role)) {
-            user.removeRole(role);
-            System.out.println("Role " + role + " removed from user: " + user.getUsername());
-        } else {
-            System.out.println("User does not have this role.");
-        }
-    }
 
     // List all user accounts
     private void listUsers() {
