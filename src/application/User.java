@@ -25,6 +25,7 @@ public class User {
     private String preferredFirstName; // Optional preferred first name
     private List<String> roles; // List of roles assigned to the user
     private boolean oneTimePassword; // Flag for one-time password usage
+    private String otp; // One-time password
     private byte[] passwordHash; // To store hashed password
     private LocalDateTime oneTimePasswordExpiry; // Expiry time for one-time password
     private boolean accountSetupCompleted;
@@ -42,6 +43,7 @@ public class User {
         this.oneTimePassword = false;
         this.passwordHash = null; // Initialize with null or empty byte array
         this.oneTimePasswordExpiry = null; // Initialize with null
+        this.otp = null;
         this.accountSetupCompleted = false;
     }
     // Constructor for the initial user creation
@@ -169,7 +171,32 @@ public class User {
     public void setAccountSetupCompleted(boolean accountSetupCompleted) {
         this.accountSetupCompleted = accountSetupCompleted;
     }
-
+    
+    public String getOtp() {
+        return otp;
+    }
+    public boolean validateOtp(String inputOtp) {
+        if (oneTimePassword && oneTimePasswordExpiry != null && LocalDateTime.now().isBefore(oneTimePasswordExpiry)) {
+            if (this.otp.equals(inputOtp)) {
+                oneTimePassword = false; // Reset the flag after successful login
+                return true;
+            }
+        }
+        return false;
+    }
+    public void setOtp(String otp)
+    {
+    	this.otp = otp;
+    }
+    // Method to set a new password after validating OTP
+    public boolean setNewPassword(String newPassword) {
+        if (!oneTimePassword) {
+            this.password = newPassword;
+            accountSetupCompleted = true; // Mark account setup as completed
+            return true;
+        }
+        return false; // Cannot set new password if OTP is still active
+    }
     // Sets the roles for the user by clearing existing roles and adding new ones
     public void setRoles(List<String> roles) {
         this.roles.clear(); // Clear existing roles
