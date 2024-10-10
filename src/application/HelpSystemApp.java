@@ -59,28 +59,40 @@ public class HelpSystemApp extends Application {
         TextField inviteInput = new TextField(); // Input field for the code
         GridPane.setConstraints(inviteInput, 1, 3); // Place it next to the label
 
-        // Login button setup
-Button loginButton = new Button("Login");
-loginButton.setOnAction(e -> {
-    String username = userInput.getText();
-    String password = passInput.getText();
+        // Login Button
+        Button loginButton = new Button("Login");
+        GridPane.setConstraints(loginButton, 1, 4);
+        
+        loginButton.setOnAction(e -> {
+            String username = userInput.getText();
+            String password = passInput.getText();
+            // Login logic
+            User user = userAccounts.get(username);
+            if (user != null && user.getPassword().equals(password)) {
+                System.out.println("Login successful!");
+                currentUser = user;
+                if (currentUser.getRoles().contains("ADMIN")) {
+                    showAdminDashboard(primaryStage); // Show Admin Dashboard
+                } else {
+                    // Check if account setup is completed
+                    if (!currentUser.isAccountSetupCompleted()) {
+                        showAccountSetup(primaryStage); // Show account setup only if not completed
+                    } else {
+                        // Redirect to the user's home page if account setup is completed
+                    	handleLogin(currentUser, primaryStage); // Assuming at least one role exists
+                    }
+                }
+            } else {
+                System.out.println("Invalid username or password.");
+            }
+        });
 
-    // Basic check for valid username/password
-    if (userAccounts.containsKey(username) && userAccounts.get(username).getPassword().equals(password)) {
-        currentUser = userAccounts.get(username); // Log in the user
-        System.out.println("Login successful!");
-        redirectToRoleHomePage(currentUser.getRole(), primaryStage); // Send them to their role's homepage
-    } else {
-        System.out.println("Invalid username or password."); // Handle invalid login
-    }
-});
-
-// Register button setup
-Button registerButton = new Button("Register");
-GridPane.setConstraints(registerButton, 1, 5); // Place the register button
-registerButton.setOnAction(e -> {
-    String username = userInput.getText(); // Grab the username
-    String password = passInput.getText(); // Grab the password
+    // Register button setup
+    Button registerButton = new Button("Register");
+    GridPane.setConstraints(registerButton, 1, 5); // Place the register button
+    registerButton.setOnAction(e -> {
+        String username = userInput.getText(); // Grab the username
+        String password = passInput.getText(); // Grab the password
 
         // If this is the first user, make them an admin
         if (isFirstUser) {
@@ -260,7 +272,7 @@ private void showAdminDashboard(Stage primaryStage) {
     GridPane.setConstraints(listUsersButton, 0, 4); // Position list users 
     listUsersButton.setOnAction(e -> listUsers()); // List users when clicked
 
-    // Button to manage users in more detail
+    // Button to manage users
     Button manageUsersButton = new Button("Manage Users");
     GridPane.setConstraints(manageUsersButton, 0, 5); // Position the manage users button
     manageUsersButton.setOnAction(e -> showManageUsersPage(primaryStage)); // Go to manage users page
@@ -274,7 +286,8 @@ private void showAdminDashboard(Stage primaryStage) {
     });
 
     // Add the logout button and other elements to the grid
-    adminGrid.getChildren().addAll(welcomeLabel, inviteUserButton, resetUserButton, deleteUserButton, listUsersButton, manageUsersButton, logoutButton);
+    adminGrid.getChildren().add(logoutButton); // Add the logout button to the grid
+    adminGrid.getChildren().addAll(welcomeLabel, inviteUserButton, resetUserButton, deleteUserButton, listUsersButton,manageUsersButton);
 
     // Set up the scene with the grid and display it
     Scene adminScene = new Scene(adminGrid, 400, 300); // Create the admin scene
@@ -294,59 +307,51 @@ private void showAdminDashboard(Stage primaryStage) {
 
     // Show dialog for inviting a new user
 private void showInviteUserDialog() {
-    Stage dialogStage = new Stage();
-    dialogStage.setTitle("Generate Invitation Code"); // Set the title for the dialog
-
-    // Create a grid layout for the invite dialog
-    GridPane inviteGrid = new GridPane();
-    inviteGrid.setPadding(new Insets(10, 10, 10, 10)); // Add padding
-    inviteGrid.setVgap(8); // Vertical spacing
-    inviteGrid.setHgap(10); // Horizontal spacing
-
-    // Label and input for entering a role
-    Label roleLabel = new Label("Role (ADMIN, STUDENT, INSTRUCTOR):");
-    GridPane.setConstraints(roleLabel, 0, 0); // Place the label at the top left
-    TextField roleInput = new TextField(); // Input for the role
-    GridPane.setConstraints(roleInput, 1, 0); // Position the input next to the label
-
-    // Label and output field for showing the generated invitation code
-    Label inviteCodeLabel = new Label("Generated Code:");
-    GridPane.setConstraints(inviteCodeLabel, 0, 1); // Position the code label
-    TextField inviteCodeOutput = new TextField(); // Output field for showing the code
-    inviteCodeOutput.setEditable(false); // Make it read only
-    GridPane.setConstraints(inviteCodeOutput, 1, 1); // Position the output field
-    
-    // Button to generate the code
-    Button generateButton = new Button("Generate Code");
-    GridPane.setConstraints(generateButton, 1, 2); // Position the generate button
-    generateButton.setOnAction(e -> {
-        String role = roleInput.getText().toUpperCase(); // Get the role input and normalize it
-        if (!role.equals("ADMIN") && !role.equals("STUDENT") && !role.equals("INSTRUCTOR")) {
-            System.out.println("Invalid role entered."); // Handle invalid role input
-                return; // Exit the method if the role is invalid
+        Stage dialogStage = new Stage();
+        dialogStage.setTitle("Generate Invitation Code"); // Sets the title
+        GridPane inviteGrid = new GridPane();
+        inviteGrid.setPadding(new Insets(10, 10, 10, 10)); // Padding
+        inviteGrid.setVgap(8); // Vertical
+        inviteGrid.setHgap(10); // Horizontal
+        Label roleLabel = new Label("Role (ADMIN, STUDENT, INSTRUCTOR):"); // Add the role labels
+        GridPane.setConstraints(roleLabel, 0, 0);
+        TextField roleInput = new TextField();
+        GridPane.setConstraints(roleInput, 1, 0);
+        Label inviteCodeLabel = new Label("Generated Code:"); // Add generated code label
+        GridPane.setConstraints(inviteCodeLabel, 0, 1);
+        TextField inviteCodeOutput = new TextField();
+        inviteCodeOutput.setEditable(false); // Prevents editing
+        GridPane.setConstraints(inviteCodeOutput, 1, 1);
+        Button generateButton = new Button("Generate Code"); // Add generate code button
+        GridPane.setConstraints(generateButton, 1, 2);
+        generateButton.setOnAction(e -> {
+            String role = roleInput.getText().toUpperCase();
+            if (!role.equals("ADMIN") && !role.equals("STUDENT") && !role.equals("INSTRUCTOR")) {
+                System.out.println("Invalid role entered.");
+                return;
             }
-        // Generate a unique invitation code
-        String invitationCode = generateResetToken(); // Use the token generator method
-        invitationCodes.put(invitationCode, role); // Store the code with the role
-        inviteCodeOutput.setText(invitationCode); // Display the generated code
-        System.out.println("Generated invitation code: " + invitationCode + " for role: " + role);
-    });
-    // Add all elements to the grid
-    inviteGrid.getChildren().addAll(roleLabel, roleInput, inviteCodeLabel, inviteCodeOutput, generateButton);
-    // Set up the scene and show the dialog
-    Scene dialogScene = new Scene(inviteGrid, 400, 200); // Create a scene for the invite dialog
-    dialogStage.setScene(dialogScene); // Set the scene on the dialog stage
-    dialogStage.show(); // Show the invite dialog
-}
+            // Generate a unique invitation code
+            String invitationCode = generateResetToken();
+            invitationCodes.put(invitationCode, role); // Store the code with the associated role
+            inviteCodeOutput.setText(invitationCode); // Display the generated code
+            System.out.println("Generated invitation code: " + invitationCode + " for role: " + role);
+        });
+        inviteGrid.getChildren().addAll(roleLabel, roleInput, inviteCodeLabel, inviteCodeOutput, generateButton);
+
+        Scene dialogScene = new Scene(inviteGrid, 400, 200);
+        dialogStage.setScene(dialogScene);
+        dialogStage.show();
+    }
+    
     // Show dialog for resetting a user account
 private void showResetUserDialog() {
     Stage dialogStage = new Stage();
     dialogStage.setTitle("Reset User Account"); // Set the title for the dialog
     // Create a grid for the reset dialog
     GridPane resetGrid = new GridPane();
-    resetGrid.setPadding(new Insets(10, 10, 10, 10)); // Padding around the grid
-    resetGrid.setVgap(8); // Space between rows
-    resetGrid.setHgap(10); // Space between columns
+    resetGrid.setPadding(new Insets(10, 10, 10, 10)); // Padding
+    resetGrid.setVgap(8);
+    resetGrid.setHgap(10);
     
     // Label and input field for the username
     Label usernameLabel = new Label("Username:");
@@ -447,7 +452,7 @@ private void showStudentHomePage(Stage primaryStage) {
     studentHomeStage.setScene(scene); // Set the scene on the stage
     studentHomeStage.show(); // Show the student home page
 }
- // Method to show the user management page
+ // Show the user management page
 private void showManageUsersPage(Stage primaryStage) {
     Stage manageUsersStage = new Stage();
     manageUsersStage.setTitle("Manage Users"); // Set title for the window
@@ -507,8 +512,43 @@ private void showManageUsersPage(Stage primaryStage) {
     manageUsersStage.setScene(scene); // Set the scene on the stage
     manageUsersStage.show(); // Show stage
 }
-
-    // Method to handle adding a user (simplified)
+    // Method to add a user
+    private void showAddUserDialog() {
+        Stage addUserStage = new Stage(); // Set stage
+        addUserStage.setTitle("Add New User");
+        VBox layout = new VBox(10);
+        
+        layout.setPadding(new Insets(20, 20, 20, 20)); // Padding
+        Label nameLabel = new Label("Enter User Name:");
+        TextField nameInput = new TextField(); // Input for the combobox
+        Label roleLabel = new Label("Select Role:");
+        ComboBox<String> roleComboBox = new ComboBox<>();
+        roleComboBox.getItems().addAll("Student", "Instructor", "Admin"); // Selection
+        
+        Button submitButton = new Button("Submit");
+        submitButton.setOnAction(e -> {
+            String userName = nameInput.getText();
+            String role = roleComboBox.getValue();
+            if (!userName.isEmpty() && role != null) {
+                // Logic to add the user to the system
+                System.out.println("Added user: " + userName + " with role: " + role);
+                addUserStage.close();
+            } else {
+                System.out.println("User name or role not selected.");
+            }
+        });
+        layout.getChildren().addAll(nameLabel, nameInput, roleLabel, roleComboBox, submitButton);
+        Scene scene = new Scene(layout, 300, 200);
+        addUserStage.setScene(scene);
+        addUserStage.show();
+    }
+    // Method to handle editing a user role (simplified)
+ private void showEditUserRoleDialog(String selectedUser) {
+    Stage editUserRoleStage = new Stage();
+    editUserRoleStage.setTitle("Edit User Roles");
+    VBox layout = new VBox(10);
+     layout.setPadding(new Insets(20, 20, 20, 20));
+ 
     Label userLabel = new Label("Editing roles for: " + selectedUser); // Display user being edited
 
     // Get the current user object
@@ -553,60 +593,13 @@ private void showManageUsersPage(Stage primaryStage) {
     editUserRoleStage.setScene(scene); // Set the scene
     editUserRoleStage.show(); // Show the stage
 
-
-
-    // Method to handle adding a user (simplified)
-    Label userLabel = new Label("Editing roles for: " + selectedUser); // Display user being edited
-
-    // Get the current user object
-    User user = userAccounts.get(selectedUser.split(" - ")[0]); // Extract username from the string
-
-    // Create checkboxes for role selection
-    CheckBox studentCheckBox = new CheckBox("Student");
-    CheckBox instructorCheckBox = new CheckBox("Instructor");
-    CheckBox adminCheckBox = new CheckBox("Admin");
-
-// Mark checkboxes based on current user roles
-studentCheckBox.setSelected(user.getRoles().contains("Student"));
-instructorCheckBox.setSelected(user.getRoles().contains("Instructor"));
-adminCheckBox.setSelected(user.getRoles().contains("Admin"));
-
-// Button to submit the role changes
-Button submitButton = new Button("Submit");
-submitButton.setOnAction(e -> {
-    // Collect selected roles based on checkboxes
-    List<String> selectedRoles = new ArrayList<>();
-    if (studentCheckBox.isSelected()) {
-        selectedRoles.add("Student");
-    }
-    if (instructorCheckBox.isSelected()) {
-        selectedRoles.add("Instructor");
-    }
-    if (adminCheckBox.isSelected()) {
-        selectedRoles.add("Admin");
-    }
-
-    // Update the user's roles with the new selection
-    user.setRoles(selectedRoles);
-    System.out.println("Updated roles for " + selectedUser + " to: " + selectedRoles);
-    editUserRoleStage.close(); // Close the role editing dialog
-});
-
-// Add elements to the layout
-layout.getChildren().addAll(userLabel, studentCheckBox, instructorCheckBox, adminCheckBox, submitButton);
-
-// Set up and show the scene for editing roles
-Scene scene = new Scene(layout, 300, 200); // Set size for the role editing window
-editUserRoleStage.setScene(scene); // Set the scene
-editUserRoleStage.show(); // Show the stage
-
-// Instructor Home Page----
+// Instructor Home Page
     private void showInstructorHomePage(Stage primaryStage) {
         Stage instructorHomeStage = new Stage();
         instructorHomeStage.setTitle("Instructor Home Page");
 
         VBox layout = new VBox(10);
-        layout.setPadding(new Insets(20, 20, 20, 20));
+        layout.setPadding(new Insets(20, 20, 20, 20)); // Padding
 
         Label welcomeLabel = new Label("Welcome, Instructor!");
         Button logoutButton = new Button("Log Out");
@@ -615,7 +608,7 @@ editUserRoleStage.show(); // Show the stage
             start(primaryStage); // Redirect back to login after logout
         });
 
-        layout.getChildren().addAll(welcomeLabel, logoutButton);
+        layout.getChildren().addAll(welcomeLabel, logoutButton); // Add children
 
         Scene scene = new Scene(layout, 300, 200);
         instructorHomeStage.setScene(scene);
@@ -665,9 +658,9 @@ editUserRoleStage.show(); // Show the stage
         start(primaryStage); // Redirect back to the login page
 });
 
-// Add buttons and labels to the grid----
-adminGrid.getChildren().addAll(welcomeLabel, inviteUserButton, resetUserButton, deleteUserButton, listUsersButton, manageUsersButton, logoutButton);
-
+// Add buttons and labels to the grid
+adminGrid.getChildren().add(logoutButton); // Add the logout button to the grid
+adminGrid.getChildren().addAll(welcomeLabel, inviteUserButton, resetUserButton, deleteUserButton, listUsersButton,manageUsersButton);
 // Set up and display the admin page
 Scene adminScene = new Scene(adminGrid, 400, 300);
 primaryStage.setScene(adminScene);
@@ -742,6 +735,8 @@ private void redirectToRoleHomePage(String role, Stage primaryStage) {
         case "INSTRUCTOR":
             showInstructorHomePage(primaryStage); // Redirect to instructor home
             break;
+        default:
+                System.out.println("Unknown role: " + role);
     }
 }
 
