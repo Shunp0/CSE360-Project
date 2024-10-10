@@ -359,71 +359,397 @@ public class HelpSystemApp extends Application {
         dialogStage.show();
     }
 
-// Show dialog for deleting a user account
-roleGrid.getChildren().addAll(roleLabel, roleSelectionBox, submitButton);
+    // Show dialog for deleting a user account
+    private void showDeleteUserDialog() {
+        Stage dialogStage = new Stage();
+        dialogStage.setTitle("Delete User Account");
 
-Scene roleScene = new Scene(roleGrid, 300, 150);
-roleDialogStage.setScene(roleScene);
-roleDialogStage.show();
-}
+        GridPane deleteGrid = new GridPane();
+        deleteGrid.setPadding(new Insets(10, 10, 10, 10));
+        deleteGrid.setVgap(8);
+        deleteGrid.setHgap(10);
 
-// Redirect to home page based on role
-private void redirectToRoleHomePage(String role, Stage primaryStage) {
-    String normalizedRole = role.toUpperCase(); // Normalize role string
+        Label usernameLabel = new Label("Username:");
+        GridPane.setConstraints(usernameLabel, 0, 0);
+        TextField usernameInput = new TextField();
+        GridPane.setConstraints(usernameInput, 1, 0);
 
-    switch (normalizedRole) {
-        case "STUDENT":
-            showStudentHomePage(primaryStage); // Show student page
-            break;
-        case "INSTRUCTOR":
-            showInstructorHomePage(primaryStage); // Show instructor page
-            break;
-        case "ADMIN":
-            showAdminHomePage(primaryStage); // Show admin page
-            break;
-        default:
-            System.out.println("Unknown role: " + role); // If all else fails
+        Button deleteButton = new Button("Delete User");
+        GridPane.setConstraints(deleteButton, 1, 1);
+        deleteButton.setOnAction(e -> {
+            String username = usernameInput.getText();
+            if (userAccounts.remove(username) != null) {
+                System.out.println("User " + username + " deleted successfully.");
+            } else {
+                System.out.println("User not found.");
+            }
+            dialogStage.close();
+        });
+
+        deleteGrid.getChildren().addAll(usernameLabel, usernameInput, deleteButton);
+
+        Scene dialogScene = new Scene(deleteGrid, 300, 150);
+        dialogStage.setScene(dialogScene);
+        dialogStage.show();
+    }
+ // Student Home Page
+    private void showStudentHomePage(Stage primaryStage) {
+        Stage studentHomeStage = new Stage();
+        studentHomeStage.setTitle("Student Home Page");
+
+        VBox layout = new VBox(10);
+        layout.setPadding(new Insets(20, 20, 20, 20));
+
+        Label welcomeLabel = new Label("Welcome, Student!");
+        Button logoutButton = new Button("Log Out");
+        logoutButton.setOnAction(e -> {
+            studentHomeStage.close();
+            start(primaryStage); // Redirect back to login after logout
+        });
+
+        layout.getChildren().addAll(welcomeLabel, logoutButton);
+
+        Scene scene = new Scene(layout, 300, 200);
+        studentHomeStage.setScene(scene);
+        studentHomeStage.show();
+    }
+
+ // Method to show the user management page
+    private void showManageUsersPage(Stage primaryStage) {
+        Stage manageUsersStage = new Stage();
+        manageUsersStage.setTitle("Manage Users");
+
+        VBox layout = new VBox(10);
+        layout.setPadding(new Insets(20, 20, 20, 20));
+
+        Label manageUsersLabel = new Label("Manage Users");
+
+        // Create a ListView to display the users
+        ListView<String> userListView = new ListView<>();
+
+        // Populate the ListView with actual user data
+        for (String username : userAccounts.keySet()) {
+            User user = userAccounts.get(username);
+            String roles = String.join(", ", user.getRoles()); // Joining roles with a comma
+            userListView.getItems().add(username + " - Roles: " + roles);
+        }
+
+        // Add buttons for managing users
+        Button addUserButton = new Button("Add User");
+        Button deleteUserButton = new Button("Delete Selected User");
+        Button editUserRoleButton = new Button("Edit Selected User Role");
+
+        // Action for adding a user (open a dialog for this)
+        addUserButton.setOnAction(e -> {
+            showAddUserDialog(); // This method will handle adding a user
+        });
+
+        // Action for deleting a selected user
+        deleteUserButton.setOnAction(e -> {
+            String selectedUser = userListView.getSelectionModel().getSelectedItem();
+            if (selectedUser != null) {
+                String username = selectedUser.split(" - ")[0]; // Extract username
+                userAccounts.remove(username); // Remove user from the map
+                userListView.getItems().remove(selectedUser); // Remove from the ListView
+                System.out.println("Deleted user: " + username);
+            } else {
+                System.out.println("No user selected for deletion.");
+            }
+        });
+
+        // Action for editing user roles
+        editUserRoleButton.setOnAction(e -> {
+            String selectedUser = userListView.getSelectionModel().getSelectedItem();
+            if (selectedUser != null) {
+                String username = selectedUser.split(" - ")[0]; // Extract username
+                showEditUserRoleDialog(username); // Open a dialog to edit roles
+            } else {
+                System.out.println("No user selected for role edit.");
+            }
+        });
+
+        layout.getChildren().addAll(manageUsersLabel, userListView, addUserButton, deleteUserButton, editUserRoleButton);
+
+        Scene scene = new Scene(layout, 400, 300);
+        manageUsersStage.setScene(scene);
+        manageUsersStage.show();
+    }
+
+
+    // Method to handle adding a user (simplified)
+    private void showAddUserDialog() {
+        Stage addUserStage = new Stage();
+        addUserStage.setTitle("Add New User");
+
+        VBox layout = new VBox(10);
+        layout.setPadding(new Insets(20, 20, 20, 20));
+
+        Label nameLabel = new Label("Enter User Name:");
+        TextField nameInput = new TextField();
+        Label roleLabel = new Label("Select Role:");
+        ComboBox<String> roleComboBox = new ComboBox<>();
+        roleComboBox.getItems().addAll("Student", "Instructor", "Admin");
+
+        Button submitButton = new Button("Submit");
+        submitButton.setOnAction(e -> {
+            String userName = nameInput.getText();
+            String role = roleComboBox.getValue();
+            if (!userName.isEmpty() && role != null) {
+                // Logic to add the user to the system
+                System.out.println("Added user: " + userName + " with role: " + role);
+                addUserStage.close();
+            } else {
+                System.out.println("User name or role not selected.");
+            }
+        });
+
+        layout.getChildren().addAll(nameLabel, nameInput, roleLabel, roleComboBox, submitButton);
+
+        Scene scene = new Scene(layout, 300, 200);
+        addUserStage.setScene(scene);
+        addUserStage.show();
+    }
+
+    // Method to handle editing a user role (simplified)
+    private void showEditUserRoleDialog(String selectedUser) {
+        Stage editUserRoleStage = new Stage();
+        editUserRoleStage.setTitle("Edit User Roles");
+
+        VBox layout = new VBox(10);
+        layout.setPadding(new Insets(20, 20, 20, 20));
+
+        Label userLabel = new Label("Editing roles for: " + selectedUser);
+
+        // Get the current user
+        User user = userAccounts.get(selectedUser.split(" - ")[0]); // Extract username
+
+        // Create checkboxes for role selection
+        CheckBox studentCheckBox = new CheckBox("Student");
+        CheckBox instructorCheckBox = new CheckBox("Instructor");
+        CheckBox adminCheckBox = new CheckBox("Admin");
+
+        // Mark current roles as checked
+        studentCheckBox.setSelected(user.getRoles().contains("Student"));
+        instructorCheckBox.setSelected(user.getRoles().contains("Instructor"));
+        adminCheckBox.setSelected(user.getRoles().contains("Admin"));
+
+        // Button to submit role changes
+        Button submitButton = new Button("Submit");
+        submitButton.setOnAction(e -> {
+            // Collect selected roles based on checkboxes
+            List<String> selectedRoles = new ArrayList<>();
+            if (studentCheckBox.isSelected()) {
+                selectedRoles.add("Student");
+            }
+            if (instructorCheckBox.isSelected()) {
+                selectedRoles.add("Instructor");
+            }
+            if (adminCheckBox.isSelected()) {
+                selectedRoles.add("Admin");
+            }
+
+            // Update user's roles
+            user.setRoles(selectedRoles);
+            System.out.println("Updated roles for " + selectedUser + " to: " + selectedRoles);
+            editUserRoleStage.close();
+        });
+
+        layout.getChildren().addAll(userLabel, studentCheckBox, instructorCheckBox, adminCheckBox, submitButton);
+
+        Scene scene = new Scene(layout, 300, 200);
+        editUserRoleStage.setScene(scene);
+        editUserRoleStage.show();
+    }
+
+
+
+
+    // Instructor Home Page
+    private void showInstructorHomePage(Stage primaryStage) {
+        Stage instructorHomeStage = new Stage();
+        instructorHomeStage.setTitle("Instructor Home Page");
+
+        VBox layout = new VBox(10);
+        layout.setPadding(new Insets(20, 20, 20, 20));
+
+        Label welcomeLabel = new Label("Welcome, Instructor!");
+        Button logoutButton = new Button("Log Out");
+        logoutButton.setOnAction(e -> {
+            instructorHomeStage.close();
+            start(primaryStage); // Redirect back to login after logout
+        });
+
+        layout.getChildren().addAll(welcomeLabel, logoutButton);
+
+        Scene scene = new Scene(layout, 300, 200);
+        instructorHomeStage.setScene(scene);
+        instructorHomeStage.show();
+    }
+
+
+    // Admin Home Page (More options can be added here)
+    private void showAdminHomePage(Stage primaryStage) {
+        GridPane adminGrid = new GridPane();
+        adminGrid.setPadding(new Insets(10, 10, 10, 10));
+        adminGrid.setVgap(8);
+        adminGrid.setHgap(10);
+
+        Label welcomeLabel = new Label("Admin Dashboard");
+        GridPane.setConstraints(welcomeLabel, 0, 0);
+
+        // Button to invite new users
+        Button inviteUserButton = new Button("Invite New User");
+        GridPane.setConstraints(inviteUserButton, 0, 1);
+        inviteUserButton.setOnAction(e -> showInviteUserDialog());
+
+        // Button to reset user account
+        Button resetUserButton = new Button("Reset User Account");
+        GridPane.setConstraints(resetUserButton, 0, 2);
+        resetUserButton.setOnAction(e -> showResetUserDialog());
+
+        // Button to delete user account
+        Button deleteUserButton = new Button("Delete User Account");
+        GridPane.setConstraints(deleteUserButton, 0, 3);
+        deleteUserButton.setOnAction(e -> showDeleteUserDialog());
+        
+        Button manageUsersButton = new Button("Manage Users");
+        manageUsersButton.setOnAction(e -> showManageUsersPage(primaryStage)); 
+        // Button to list user accounts
+        Button listUsersButton = new Button("List User Accounts");
+        GridPane.setConstraints(listUsersButton, 0, 4);
+        listUsersButton.setOnAction(e -> listUsers());
+     // Add Logout Button
+        Button logoutButton = new Button("Logout");
+        GridPane.setConstraints(logoutButton, 0, 5);
+        logoutButton.setOnAction(e -> {
+            currentUser = null; // Clear the current user
+            start(primaryStage); // Redirect back to the login scene
+        });
+
+        adminGrid.getChildren().add(logoutButton); // Add the logout button to the grid
+
+
+        adminGrid.getChildren().addAll(welcomeLabel, inviteUserButton, resetUserButton, deleteUserButton, listUsersButton,manageUsersButton);
+
+        Scene adminScene = new Scene(adminGrid, 400, 300);
+        primaryStage.setScene(adminScene);
+        primaryStage.setTitle("Admin Home Page");
+
+        VBox layout = new VBox(10);
+        layout.setPadding(new Insets(20, 20, 20, 20));
+        logoutButton.setOnAction(e -> {
+            primaryStage.close();
+            start(primaryStage); // Redirect back to login after logout
+        });
+    }
+
+
+
+    private void handleLogin(User user, Stage primaryStage) {
+        if (user.getRoles().size() == 1) {
+            // If the user has only one role, redirect to the home page for that role
+            redirectToRoleHomePage(user.getRoles().get(0), primaryStage);
+        } else if (user.getRoles().size() > 1) {
+            // If the user has multiple roles, prompt them to select a role for the session
+            showRoleSelectionDialog(user, primaryStage);
+        }
+    }
+
+
+    // Show a dialog to let the user select their role for the session
+    private void showRoleSelectionDialog(User user, Stage primaryStage) {
+        Stage roleDialogStage = new Stage();
+        roleDialogStage.setTitle("Select Role");
+
+        GridPane roleGrid = new GridPane();
+        roleGrid.setPadding(new Insets(10, 10, 10, 10));
+        roleGrid.setVgap(8);
+        roleGrid.setHgap(10);
+
+        Label roleLabel = new Label("Select Role:");
+        GridPane.setConstraints(roleLabel, 0, 0);
+
+        ComboBox<String> roleSelectionBox = new ComboBox<>();
+        roleSelectionBox.getItems().addAll(user.getRoles());
+        GridPane.setConstraints(roleSelectionBox, 1, 0);
+
+        Button submitButton = new Button("Submit");
+        GridPane.setConstraints(submitButton, 1, 1);
+        submitButton.setOnAction(e -> {
+            String selectedRole = roleSelectionBox.getValue();
+            if (selectedRole != null) {
+                redirectToRoleHomePage(selectedRole, primaryStage); // Pass primaryStage here
+                roleDialogStage.close(); // Close the dialog after selection
+            }
+        });
+
+        roleGrid.getChildren().addAll(roleLabel, roleSelectionBox, submitButton);
+
+        Scene roleScene = new Scene(roleGrid, 300, 150);
+        roleDialogStage.setScene(roleScene);
+        roleDialogStage.show();
+    }
+
+
+    // Redirect to the appropriate home page based on the role
+    private void redirectToRoleHomePage(String role, Stage primaryStage) {
+        String normalizedRole = role.toUpperCase(); // Normalize the role
+
+        switch (normalizedRole) {
+            case "STUDENT":
+                showStudentHomePage(primaryStage);
+                break;
+            case "INSTRUCTOR":
+                showInstructorHomePage(primaryStage);
+                break;
+            case "ADMIN":
+                showAdminHomePage(primaryStage);
+                break;
+            default:
+                System.out.println("Unknown role: " + role);
+        }
+    }
+
+
+    // List all user accounts
+    private void listUsers() {
+        System.out.println("Current Users:");
+        for (String username : userAccounts.keySet()) {
+            System.out.println(" - " + username + " with roles: " + userAccounts.get(username).getRoles());
+        }
+    }
+
+    // Method to generate a reset token (simple example)
+    private String generateResetToken() {
+        return Long.toHexString(Double.doubleToLongBits(Math.random()));
+    }
+
+    // Method to show the role-specific page
+    private void showRoleSpecificPage(Stage primaryStage, String role) {
+        GridPane roleGrid = new GridPane();
+        roleGrid.setPadding(new Insets(10, 10, 10, 10));
+        roleGrid.setVgap(8);
+        roleGrid.setHgap(10);
+
+        Label rolePageLabel = new Label("Welcome to the " + role + " Page!");
+        GridPane.setConstraints(rolePageLabel, 0, 0);
+
+        // Add Logout Button
+        Button logoutButton = new Button("Logout");
+        GridPane.setConstraints(logoutButton, 0, 1);
+        logoutButton.setOnAction(e -> {
+            currentUser = null; // Clear the current user
+            start(primaryStage); // Redirect back to the login scene
+        });
+
+        roleGrid.getChildren().addAll(rolePageLabel, logoutButton);
+        Scene roleScene = new Scene(roleGrid, 400, 200);
+        primaryStage.setScene(roleScene);
+    }
+
+
+    public static void main(String[] args) {
+        launch(args);
     }
 }
-
-// List all user accounts
-private void listUsers() {
-    System.out.println("Current Users:"); // Print user accounts
-    for (String username : userAccounts.keySet()) {
-        System.out.println(" - " + username + " with roles: " + userAccounts.get(username).getRoles());
-    }
-}
-
-// Generate a reset token (random hex)
-private String generateResetToken() {
-    return Long.toHexString(Double.doubleToLongBits(Math.random()));
-}
-
-// Show the role's specific page
-private void showRoleSpecificPage(Stage primaryStage, String role) {
-    GridPane roleGrid = new GridPane();
-    roleGrid.setPadding(new Insets(10, 10, 10, 10)); // Set padding
-    roleGrid.setVgap(8);
-    roleGrid.setHgap(10);
-
-    Label rolePageLabel = new Label("Welcome to the " + role + " Page!"); // Show role page label
-    GridPane.setConstraints(rolePageLabel, 0, 0);
-
-    // Logout Button
-    Button logoutButton = new Button("Logout");
-    GridPane.setConstraints(logoutButton, 0, 1);
-    logoutButton.setOnAction(e -> {
-        currentUser = null; // Clear current user on logout
-        start(primaryStage); // Go back to login
-    });
-
-    roleGrid.getChildren().addAll(rolePageLabel, logoutButton); // Add elements to grid
-    Scene roleScene = new Scene(roleGrid, 400, 200);
-    primaryStage.setScene(roleScene); // Display the scene
-}
-
-public static void main(String[] args) {
-    launch(args); // Start!
-}
-
 
