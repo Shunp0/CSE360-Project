@@ -2,19 +2,22 @@ package application;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.time.LocalDateTime;
 
 public class User {
     private String username;
-    private String password; // Store plaintext password for simplicity; hash in production
+    private String password; // Store the plaintext password for simplicity; hash in production
     private String email; // User's email address
     private String firstName; // User's first name
     private String middleName; // User's middle name (optional)
     private String lastName; // User's last name
     private String preferredFirstName; // Optional preferred first name
     private List<String> roles; // List of roles assigned to the user
-    private boolean firstTimeSetup; // Flag to check if the user needs to finish setup
+    private boolean oneTimePassword; // Flag for one-time password usage
+    private byte[] passwordHash; // To store hashed password
+    private LocalDateTime oneTimePasswordExpiry; // Expiry time for one-time password
+    private boolean accountSetupCompleted;
 
-    // Default constructor
     public User() {
         this.username = "";
         this.password = "";
@@ -24,18 +27,21 @@ public class User {
         this.lastName = "";
         this.preferredFirstName = "";
         this.roles = new ArrayList<>();
-        this.firstTimeSetup = true; // Default to true for new users
+        this.oneTimePassword = false;
+        this.passwordHash = null; // Initialize with null or empty byte array
+        this.oneTimePasswordExpiry = null; // Initialize with null
+        this.accountSetupCompleted = false;
     }
-    
+    // Constructor for the initial user creation
     public User(String username, String password, String role) {
         this.username = username;
-        this.password = password;
+        this.password = password; // In a real application, this should be hashed
         this.roles = new ArrayList<>();
-        this.roles.add(role); // Add initial role
+        this.roles.add(role); // Assign the role upon creation
+        this.accountSetupCompleted = false;
     }
 
-
-    // Constructor with parameters
+    // Full constructor for a user with all details
     public User(String username, String password, String email, String firstName, String middleName, String lastName, String preferredFirstName) {
         this.username = username;
         this.password = password; // In a real application, this should be hashed
@@ -45,7 +51,7 @@ public class User {
         this.lastName = lastName;
         this.preferredFirstName = preferredFirstName;
         this.roles = new ArrayList<>();
-        this.firstTimeSetup = true; // Default to true for new users
+        this.accountSetupCompleted = false;
     }
 
     // Getters and Setters
@@ -58,11 +64,11 @@ public class User {
     }
 
     public String getPassword() {
-        return password;
+        return password; // In a real application, do not expose plaintext passwords
     }
 
     public void setPassword(String password) {
-        this.password = password; // In a real application, this should be hashed
+        this.password = password; // Hash the password before saving in production
     }
 
     public String getEmail() {
@@ -119,20 +125,40 @@ public class User {
         roles.remove(role);
     }
 
-    public boolean isFirstTimeSetup() {
-        return firstTimeSetup;
+    public boolean isOneTimePassword() {
+        return oneTimePassword;
     }
 
-    public void setFirstTimeSetup(boolean firstTimeSetup) {
-        this.firstTimeSetup = firstTimeSetup;
+    public void setOneTimePassword(boolean oneTimePassword) {
+        this.oneTimePassword = oneTimePassword;
     }
 
-    public String getFullName() {
-        return (preferredFirstName != null && !preferredFirstName.isEmpty() ? preferredFirstName : firstName) + " " +
-               (middleName != null && !middleName.isEmpty() ? middleName + " " : "") + lastName;
+    public byte[] getPasswordHash() {
+        return passwordHash;
     }
 
-    public boolean hasRole(String role) {
-        return roles.contains(role);
+    public void setPasswordHash(byte[] passwordHash) {
+        this.passwordHash = passwordHash;
+    }
+
+    public LocalDateTime getOneTimePasswordExpiry() {
+        return oneTimePasswordExpiry;
+    }
+
+    public void setOneTimePasswordExpiry(LocalDateTime oneTimePasswordExpiry) {
+        this.oneTimePasswordExpiry = oneTimePasswordExpiry;
+    }
+    public boolean isAccountSetupCompleted() {
+        return accountSetupCompleted;
+    }
+
+    public void setAccountSetupCompleted(boolean accountSetupCompleted) {
+        this.accountSetupCompleted = accountSetupCompleted;
+    }
+
+    // Method to set roles
+    public void setRoles(List<String> roles) {
+        this.roles.clear(); // Clear existing roles
+        this.roles.addAll(roles); // Add new roles
     }
 }
