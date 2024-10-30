@@ -7,19 +7,33 @@ import javafx.scene.control.*;
 import javafx.scene.layout.GridPane;
 import javafx.stage.Stage;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import javafx.scene.layout.VBox;
+import java.util.Optional;
 
+import javafx.scene.layout.VBox;
+import java.util.Random;
+import java.util.Set;
+import java.util.stream.Collectors;
 public class HelpSystemApp extends Application {
 
     private Map<String, User> userAccounts = new HashMap<>(); // Keeping track of users
+    private Map<String, Article> articles = new HashMap<>();
     private Map<String, String> invitationCodes = new HashMap<>(); // Store invite codes
     private boolean isFirstUser = true; // Is first user
     private User currentUser; // Whoever's logged in right now
+    private Article helpSystem;
 
     // For handling password reset tokens and expiration times
     private Map<String, String> resetTokens = new HashMap<>(); // Token map for resets
@@ -276,10 +290,14 @@ private void showAdminDashboard(Stage primaryStage) {
     Button manageUsersButton = new Button("Manage Users");
     GridPane.setConstraints(manageUsersButton, 0, 5); // Position the manage users button
     manageUsersButton.setOnAction(e -> showManageUsersPage(primaryStage)); // Go to manage users page
+    
+    Button manageArticlesButton = new Button("Manage Articles");
+    GridPane.setConstraints(manageArticlesButton, 0, 6); // Position the manage users button
+    manageArticlesButton.setOnAction(e -> showManageArticlesPage(primaryStage)); // Go to manage users page
 
     // Logout button to exit the admin session
     Button logoutButton = new Button("Logout");
-    GridPane.setConstraints(logoutButton, 0, 6); // Position the logout button
+    GridPane.setConstraints(logoutButton, 0, 7); // Position the logout button
     logoutButton.setOnAction(e -> {
         currentUser = null; // Clear the current user when logging out
         start(primaryStage); // Redirect back to login scene
@@ -287,7 +305,7 @@ private void showAdminDashboard(Stage primaryStage) {
 
     // Add the logout button and other elements to the grid
     adminGrid.getChildren().add(logoutButton); // Add the logout button to the grid
-    adminGrid.getChildren().addAll(welcomeLabel, inviteUserButton, resetUserButton, deleteUserButton, listUsersButton,manageUsersButton);
+    adminGrid.getChildren().addAll(welcomeLabel, inviteUserButton, resetUserButton, deleteUserButton, listUsersButton, manageUsersButton, manageArticlesButton);
 
     // Set up the scene with the grid and display it
     Scene adminScene = new Scene(adminGrid, 400, 300); // Create the admin scene
@@ -454,9 +472,11 @@ private void showStudentHomePage(Stage primaryStage) {
     // Set up the layout for the student home page
     VBox layout = new VBox(10); // Vertical box with spacing
     layout.setPadding(new Insets(20, 20, 20, 20)); // Padding around the edges
-
+    
     // Welcome label and logout button
-    Label welcomeLabel = new Label("Welcome, Student!");
+    Label welcomeLabel = new Label("Welcome Student!");
+    Button viewArticlesButton = new Button("View All Articles");
+    viewArticlesButton.setOnAction(e -> showAllArticles()); // Set action on button click
     Button logoutButton = new Button("Log Out"); // Logout button
     logoutButton.setOnAction(e -> {
         studentHomeStage.close(); // Close the student page
@@ -464,7 +484,7 @@ private void showStudentHomePage(Stage primaryStage) {
     });
 
     // Add the label and button to the layout
-    layout.getChildren().addAll(welcomeLabel, logoutButton);
+    layout.getChildren().addAll(welcomeLabel, logoutButton, viewArticlesButton);
 
     // Set up and show the scene
     Scene scene = new Scene(layout, 300, 200); // Set size for the student home page
@@ -621,13 +641,16 @@ private void showManageUsersPage(Stage primaryStage) {
         layout.setPadding(new Insets(20, 20, 20, 20)); // Padding
 
         Label welcomeLabel = new Label("Welcome, Instructor!");
+        Button manageArticlesButton = new Button("Manage Articles");
+        GridPane.setConstraints(manageArticlesButton, 0, 6); // Position the manage users button
+        manageArticlesButton.setOnAction(e -> showManageArticlesPage(primaryStage)); // Go to manage users page
         Button logoutButton = new Button("Log Out");
         logoutButton.setOnAction(e -> {
             instructorHomeStage.close();
             start(primaryStage); // Redirect back to login after logout
         });
 
-        layout.getChildren().addAll(welcomeLabel, logoutButton); // Add children
+        layout.getChildren().addAll(welcomeLabel, logoutButton, manageArticlesButton); // Add children
 
         Scene scene = new Scene(layout, 300, 200);
         instructorHomeStage.setScene(scene);
@@ -765,6 +788,529 @@ private void showRoleSpecificPage(Stage primaryStage, String role) {
     // Set up and show the role's page
     Scene roleScene = new Scene(roleGrid, 400, 200);
     primaryStage.setScene(roleScene);
+}
+
+private void showEditArticleDialog(String selectedArticle) {
+    Stage editArticleStage = new Stage();
+    editArticleStage.setTitle("Edit Article");
+    VBox layout = new VBox(10);
+    layout.setPadding(new Insets(20, 20, 20, 20));
+
+    // Display the article being edited
+    Label articleLabel = new Label("Editing article: " + selectedArticle);
+
+    // Get the current article object
+    Article article = articles.get(selectedArticle); // Assuming articleList is a map of articles
+
+    // Create input fields for article attributes
+    TextField titleField = new TextField(article.getTitle()); // Title input
+    TextField descriptionField = new TextField(article.getDescription()); // Description input
+    TextField keywordsField = new TextField(String.join(", ", article.getKeywords())); // Keywords input
+    TextArea bodyTextArea = new TextArea(article.getBody()); // Body input as a TextArea
+
+    // Input for groups
+    TextField groupsField = new TextField(String.join(", ", article.getGroups())); // Groups input
+    // Input for references
+    TextField referencesField = new TextField(String.join(", ", article.getReferences())); // References input
+
+    // Button to submit the article changes
+    Button submitButton = new Button("Submit");
+    submitButton.setOnAction(e -> {
+        // Manually update each field of the article
+        article.setTitle(titleField.getText()); // Update title
+        article.setDescription(descriptionField.getText()); // Update description
+        article.setKeywords(new ArrayList<>(Arrays.asList(keywordsField.getText().split(",\\s*")))); // Update keywords
+        article.setBody(bodyTextArea.getText()); // Update body text
+        
+        // Update groups and references
+        article.setGroups(new ArrayList<>(Arrays.asList(groupsField.getText().split(",\\s*")))); // Update groups
+        article.setReferences(new ArrayList<>(Arrays.asList(referencesField.getText().split(",\\s*")))); // Update references
+        
+        // Optionally, you could notify the user about the update
+        System.out.println("Updated article: " + article.getTitle());
+        editArticleStage.close(); // Close the editing dialog
+    });
+
+    // Add elements to the layout
+    layout.getChildren().addAll(articleLabel, 
+                                  new Label("Title:"), titleField,
+                                  new Label("Description:"), descriptionField,
+                                  new Label("Keywords (comma-separated):"), keywordsField,
+                                  new Label("Body:"), bodyTextArea,
+                                  new Label("Groups (comma-separated):"), groupsField,
+                                  new Label("References (comma-separated):"), referencesField,
+                                  submitButton);
+
+    // Set up and show the scene for editing the article
+    Scene scene = new Scene(layout, 400, 600); // Set size for the article editing window
+    editArticleStage.setScene(scene); // Set the scene
+    editArticleStage.show(); // Show the stage
+}
+
+private void showAddArticleDialog() {
+    Stage addArticleStage = new Stage(); // Set stage
+    addArticleStage.setTitle("Add New Article");
+    VBox layout = new VBox(10);
+    
+    layout.setPadding(new Insets(20, 20, 20, 20)); // Padding
+
+    Label levelLabel = new Label("Enter Article Level:");
+    TextField levelInput = new TextField();
+
+    Label titleLabel = new Label("Enter Article Title:");
+    TextField titleInput = new TextField(); // Input for article title
+
+    // Description input
+    Label descriptionLabel = new Label("Enter Article Description:");
+    TextField descriptionInput = new TextField(); // Input for article description
+
+    // Keywords input
+    Label keywordsLabel = new Label("Enter Keywords (comma-separated):");
+    TextField keywordsInput = new TextField(); // Input for keywords
+
+    // Body input
+    Label bodyLabel = new Label("Enter Article Body:");
+    TextArea bodyInput = new TextArea(); // Input for article body
+
+    // Groups input
+    Label groupsLabel = new Label("Enter Groups (comma-separated):");
+    TextField groupsInput = new TextField(); // Input for groups
+
+    // References input
+    Label referencesLabel = new Label("Enter References (comma-separated):");
+    TextField referencesInput = new TextField(); // Input for references
+
+    // Submit button
+    Button submitButton = new Button("Submit");
+    submitButton.setOnAction(e -> {
+    	String level = levelInput.getText();
+        String title = titleInput.getText();
+        String description = descriptionInput.getText();
+        List<String> keywords = Arrays.asList(keywordsInput.getText().split(",\\s*")); // Split keywords
+        String body = bodyInput.getText();
+        List<String> groups = Arrays.asList(groupsInput.getText().split(",\\s*")); // Split groups
+        List<String> references = Arrays.asList(referencesInput.getText().split(",\\s*")); // Split references
+
+        // Check for required fields
+        if (!title.isEmpty() && !description.isEmpty()) {
+            Random random = new Random();
+            long id = random.nextLong();
+            Article newArticle = new Article(id, level, title, description, keywords, body, references, groups); // Create new article
+            articles.put(title, newArticle); // Assuming articleList is a map of article
+            System.out.println("Added article: " + title);
+            addArticleStage.close(); // Close the dialog
+        } else {
+            System.out.println("Title and description cannot be empty.");
+        }
+    });
+
+    // Add elements to the layout
+    layout.getChildren().addAll(levelLabel, levelInput, titleLabel, titleInput, 
+                                  descriptionLabel, descriptionInput,
+                                  keywordsLabel, keywordsInput,
+                                  bodyLabel, bodyInput,
+                                  groupsLabel, groupsInput,
+                                  referencesLabel, referencesInput,
+                                  submitButton);
+
+    // Set up and show the scene for adding a new article
+    Scene scene = new Scene(layout, 400, 500); // Set size for the article adding window
+    addArticleStage.setScene(scene); // Set the scene
+    addArticleStage.show(); // Show the stage
+}
+
+
+
+private void showManageArticlesPage(Stage primaryStage) {
+    Stage manageArticlesStage = new Stage();
+    manageArticlesStage.setTitle("Manage Articles"); // Set title for the window
+
+    VBox layout = new VBox(10); // Vertical layout with spacing
+    layout.setPadding(new Insets(20, 20, 20, 20)); // Padding for breathing room
+
+    Label manageArticlesLabel = new Label("Manage Articles"); // Label for the top of the page
+
+    // Create a ListView to display the articles
+    ListView<String> articleListView = new ListView<>();
+
+    // Populate the ListView with article data
+    for (String articleName : articles.keySet()) {
+    	Article article = articles.get(articleName); 
+        articleListView.getItems().add(""+articleName); // Add articles to the ListView
+    }
+
+    // Buttons for managing articles
+    Button addArticleButton = new Button("Add Article");
+    Button deleteArticleButton = new Button("Delete Selected Article");
+    Button editArticleButton = new Button("Edit Selected Article");
+    Button backupArticlesButton = new Button("Backup Articles");
+    Button restoreArticlesButton = new Button("Restore Articles");
+    Button listArticlesButton = new Button("List Articles (by group)");
+
+    // Action for adding an article
+    addArticleButton.setOnAction(e -> {
+        showAddArticleDialog();
+    });
+
+    // Action for deleting a selected article
+    deleteArticleButton.setOnAction(e -> {
+        String selectedArticle = articleListView.getSelectionModel().getSelectedItem(); // Get selected article
+        if (selectedArticle != null) {
+        	String art = selectedArticle.split(" - ")[0];
+        	articles.remove(art); // Delete article from help system
+            articleListView.getItems().remove(selectedArticle); // Remove from ListView
+            System.out.println("Deleted article: " + selectedArticle);
+        } else {
+            System.out.println("No article selected for deletion."); // Handle no selection
+        }
+    });
+
+    // Action for editing an article
+    editArticleButton.setOnAction(e -> {
+        String selectedArticle = articleListView.getSelectionModel().getSelectedItem(); // Get selected article
+        if (selectedArticle != null) {
+            showEditArticleDialog(selectedArticle); // Open dialog to edit article
+        } else {
+            System.out.println("No article selected for editing."); // Handle no selection
+        }
+    });
+    
+    backupArticlesButton.setOnAction(e -> {
+        showBackupDialog();
+    });
+    
+    restoreArticlesButton.setOnAction(e -> {
+        showRestoreDialog();
+    });
+    
+    listArticlesButton.setOnAction(e -> {
+    	showArticleListingDialog();
+    });
+
+    // Add everything to the layout
+    layout.getChildren().addAll(manageArticlesLabel, articleListView, addArticleButton, deleteArticleButton, editArticleButton, backupArticlesButton, restoreArticlesButton, listArticlesButton);
+
+    // Set up the scene and display it
+    Scene scene = new Scene(layout, 500, 400); // Set size
+    manageArticlesStage.setScene(scene); // Set the scene on the stage
+    manageArticlesStage.show(); // Show stage
+}
+
+private void showAllArticles() {
+    Stage viewArticlesStage = new Stage(); // Create a new stage
+    viewArticlesStage.setTitle("All Articles"); // Set title
+    VBox layout = new VBox(10); // Create a VBox layout
+
+    // Create a ListView to display articles
+    ListView<String> articlesListView = new ListView<>();
+
+    // Populate the ListView with article titles
+    articlesListView.getItems().addAll(articles.keySet()); // Assuming articles is a Map with article titles as keys
+
+    // Add mouse click event handler for double-click
+    articlesListView.setOnMouseClicked(event -> {
+        if (event.getClickCount() == 2) { // Check for double-click
+            String selectedArticleTitle = articlesListView.getSelectionModel().getSelectedItem();
+            if (selectedArticleTitle != null) {
+                showArticleDetails(selectedArticleTitle); // Show article details
+            }
+        }
+    });
+
+    // Add the ListView to the layout
+    layout.getChildren().add(articlesListView);
+
+    // Set up the scene for viewing articles
+    Scene scene = new Scene(layout, 300, 400); // Set size for the articles viewing window
+    viewArticlesStage.setScene(scene); // Set the scene
+    viewArticlesStage.show(); // Show the stage
+}
+
+private void showArticleDetails(String articleTitle) {
+    // Assuming you have a method to retrieve an article object by title
+    Article article = articles.get(articleTitle); // Get the article using its title
+
+    if (article != null) {
+        // Create a new dialog to display article details
+        Stage detailsStage = new Stage();
+        detailsStage.setTitle("Article Details");
+
+        VBox detailsLayout = new VBox(10);
+
+        // Display all article details except for the ID
+        detailsLayout.getChildren().add(new Label("Title: " + article.getTitle()));
+        detailsLayout.getChildren().add(new Label("Level: " + article.getLevel())); // New field
+        detailsLayout.getChildren().add(new Label("Description: " + article.getDescription())); // Example field
+        detailsLayout.getChildren().add(new Label("Keywords: " + String.join(", ",article.getKeywords()))); // Example field
+        detailsLayout.getChildren().add(new Label("Body: " + article.getBody())); // Example field
+        detailsLayout.getChildren().add(new Label("References: " + String.join(", ",article.getReferences()))); // New field
+        detailsLayout.getChildren().add(new Label("Groups: " + String.join(", ", article.getGroups()))); // New field
+
+        // Set up the scene for article details
+        Scene detailsScene = new Scene(detailsLayout, 400, 300); // Set size for the details window
+        detailsStage.setScene(detailsScene); // Set the scene
+        detailsStage.show(); // Show the details stage
+    } else {
+        // Handle the case where the article is not found
+        System.err.println("Article not found: " + articleTitle);
+    }
+}
+
+private void showBackupDialog() {
+    // Input dialog for backup filename
+    TextInputDialog filenameDialog = new TextInputDialog("backup.txt");
+    filenameDialog.setTitle("Backup Articles");
+    filenameDialog.setHeaderText("Enter the filename for the backup:");
+    filenameDialog.setContentText("Filename:");
+    
+    Optional<String> filenameResult = filenameDialog.showAndWait();
+
+    if (filenameResult.isPresent()) {
+        String filename = filenameResult.get();
+
+        // Dialog for selecting groups
+        ListView<String> groupListView = new ListView<>();
+        groupListView.getItems().addAll(getAllGroups()); // Assuming this method returns all available groups
+        groupListView.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
+        
+        // VBox to hold both dialogs
+        VBox dialogPane = new VBox();
+        dialogPane.getChildren().add(new Label("Select groups to include in backup:"));
+        dialogPane.getChildren().add(groupListView);
+
+        // Create a confirmation dialog
+        Dialog<ButtonType> groupSelectionDialog = new Dialog<>();
+        groupSelectionDialog.setTitle("Select Groups");
+        groupSelectionDialog.setHeaderText("Choose groups for backup");
+        groupSelectionDialog.getDialogPane().setContent(dialogPane);
+        groupSelectionDialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
+
+        // Show the dialog and wait for a response
+        Optional<ButtonType> groupResult = groupSelectionDialog.showAndWait();
+        
+        if (groupResult.isPresent() && groupResult.get() == ButtonType.OK) {
+            // Retrieve selected groups
+            List<String> selectedGroups = groupListView.getSelectionModel().getSelectedItems();
+            // Call the backup method with the filename and selected groups
+            backupArticles(filename, selectedGroups);
+        }
+    }
+}
+
+private void backupArticles(String filename, List<String> selectedGroups) {
+    try (BufferedWriter writer = new BufferedWriter(new FileWriter(filename))) {
+        for (Map.Entry<String, Article> entry : articles.entrySet()) {
+            Article article = entry.getValue();
+            
+            // Check if the article belongs to any of the selected groups
+            if (selectedGroups.isEmpty() || article.getGroups().stream().anyMatch(selectedGroups::contains)) {
+                // Write article details to the backup file
+                writer.write("ID: " + article.getId());
+                writer.newLine();
+                writer.write("Level: " + article.getLevel());
+                writer.newLine();
+                writer.write("Title: " + article.getTitle());
+                writer.newLine();
+                writer.write("Description: " + article.getDescription());
+                writer.newLine();
+                writer.write("Keywords: " + String.join(";", article.getKeywords())); 
+                writer.newLine();
+                writer.write("Body: " + article.getBody());
+                writer.newLine();
+                writer.write("References: " + String.join(";", article.getReferences()));
+                writer.newLine();
+                writer.write("Groups: " + String.join(";", article.getGroups()));
+                writer.newLine();
+                writer.write("-----"); // Separator for each article
+                writer.newLine();
+            }
+        }
+        System.out.println("Backup completed successfully to " + filename);
+    } catch (IOException e) {
+        System.err.println("Error during backup: " + e.getMessage());
+    }
+}
+
+
+private List<String> getAllGroups() {
+    Set<String> groupSet = new HashSet<>(); // Use a Set to avoid duplicates
+
+    // Iterate through each article and add its groups to the set
+    for (Article article : articles.values()) { // Assuming articles is a Map<Long, Article>
+        List<String> groups = article.getGroups(); // Get the list of groups for the article
+        if (groups != null) {
+            groupSet.addAll(groups); // Add all groups to the set
+        }
+    }
+
+    // Return the unique groups as a list
+    return groupSet.stream().collect(Collectors.toList());
+}
+
+private void showRestoreDialog() {
+    // Input dialog for restore filename
+    TextInputDialog dialog = new TextInputDialog("backup.txt");
+    dialog.setTitle("Restore Articles");
+    dialog.setHeaderText("Enter the filename to restore from:");
+    dialog.setContentText("Filename:");
+    Optional<String> result = dialog.showAndWait();
+
+    if (result.isPresent()) {
+        String filename = result.get();
+        restoreArticles(filename);
+    }
+}
+
+private void restoreArticles(String filename) {
+    File backupFile = new File(filename);
+    
+    if (backupFile.exists()) {
+        // Ask user if they want to merge or replace
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+        alert.setTitle("Restore Articles");
+        alert.setHeaderText("Do you want to merge or replace existing articles?");
+        alert.setContentText("Choose your option:");
+
+        ButtonType mergeButton = new ButtonType("Merge");
+        ButtonType replaceButton = new ButtonType("Replace");
+        ButtonType cancelButton = new ButtonType("Cancel");
+
+        alert.getButtonTypes().setAll(mergeButton, replaceButton, cancelButton);
+
+        Optional<ButtonType> result = alert.showAndWait();
+        if (result.isPresent() && result.get() == cancelButton) {
+            return; // User chose to cancel
+        }
+
+        try (BufferedReader reader = new BufferedReader(new FileReader(backupFile))) {
+            String line;
+            String id = null, level = null, title = null, description = null, body = null;
+            List<String> keywords = new ArrayList<>();
+            List<String> references = new ArrayList<>();
+            List<String> groups = new ArrayList<>();
+
+            while ((line = reader.readLine()) != null) {
+                if (line.startsWith("ID: ")) {
+                    id = line.substring(4).trim();
+                } else if (line.startsWith("Level: ")) {
+                    level = line.substring(7).trim();
+                } else if (line.startsWith("Title: ")) {
+                    title = line.substring(7).trim();
+                } else if (line.startsWith("Description: ")) {
+                    description = line.substring(13).trim();
+                } else if (line.startsWith("Keywords: ")) {
+                    keywords = Arrays.asList(line.substring(10).split(";"));
+                } else if (line.startsWith("Body: ")) {
+                    body = line.substring(6).trim();
+                } else if (line.startsWith("References: ")) {
+                    references = Arrays.asList(line.substring(12).split(";"));
+                } else if (line.startsWith("Groups: ")) {
+                    groups = Arrays.asList(line.substring(8).split(";"));
+                } else if (line.equals("-----")) {
+                    // Create a new Article object from parsed data
+                    long articleId = Long.parseLong(id);
+                    Article article = new Article(articleId, level, title, description, keywords, body, references, groups);
+                    
+                    if (result.get() == mergeButton) {
+                        // Merge logic: Check if any article with the same long ID already exists in the map
+                        boolean idExists = articles.values().stream()
+                            .anyMatch(existingArticle -> existingArticle.getId() == article.getId());
+                        
+                        if (!idExists) {
+                            articles.put(title, article); // Add only if no matching long ID exists
+                        }
+                    } else if (result.get() == replaceButton) {
+                    	articles.clear();
+                        articles.put(title, article);
+                    }
+
+                    // Reset variables for next article
+                    id = level = title = description = body = null;
+                    keywords = new ArrayList<>();
+                    references = new ArrayList<>();
+                    groups = new ArrayList<>();
+                }
+            }
+            showAlert("Restore Successful", "Articles restored successfully from " + backupFile.getName());
+        } catch (IOException e) {
+            showAlert("Error", "An error occurred while reading the backup file.");
+        } catch (NumberFormatException e) {
+            showAlert("Error", "Invalid ID format in the backup file.");
+        }
+    } else {
+        showAlert("File Not Found", "The specified backup file does not exist.");
+    }
+}
+
+private void showAlert(String title, String message) {
+    Alert alert = new Alert(Alert.AlertType.INFORMATION);
+    alert.setTitle(title);
+    alert.setHeaderText(null);
+    alert.setContentText(message);
+    alert.showAndWait();
+}
+
+private void showArticleListingDialog() {
+    // Create a new stage for listing articles
+    Stage listArticlesStage = new Stage();
+    listArticlesStage.setTitle("List Articles");
+
+    // Create a VBox layout
+    VBox layout = new VBox(10);
+
+    // Create a ListView to display groups
+    ListView<String> groupsListView = new ListView<>();
+    groupsListView.getItems().addAll(getAllGroups()); // Method to get all groups
+
+    // Allow multiple selections
+    groupsListView.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
+
+    // Create a button to list articles
+    Button listArticlesButton = new Button("List Articles");
+    listArticlesButton.setOnAction(event -> {
+        List<String> selectedGroups = groupsListView.getSelectionModel().getSelectedItems();
+        listArticles(selectedGroups);
+    });
+
+    // Add components to the layout
+    layout.getChildren().addAll(groupsListView, listArticlesButton);
+
+    // Set up the scene for listing articles
+    Scene scene = new Scene(layout, 300, 400);
+    listArticlesStage.setScene(scene);
+    listArticlesStage.show();
+}
+
+private void listArticles(List<String> selectedGroups) {
+    // Create a new stage to show articles
+    Stage articlesStage = new Stage();
+    articlesStage.setTitle("Articles List");
+
+    // Create a ListView to display the articles
+    ListView<String> articlesListView = new ListView<>();
+
+    // Filter articles based on selected groups
+    if (selectedGroups.isEmpty()) {
+        // If no groups are selected, show all articles
+        articlesListView.getItems().addAll(articles.values().stream()
+                .map(Article::getTitle) // Assuming Article class has a getTitle() method
+                .collect(Collectors.toList()));
+    } else {
+        // Show only articles that belong to the selected groups
+        for (Article article : articles.values()) {
+            for (String group : selectedGroups) {
+                if (article.getGroups().contains(group)) {
+                    articlesListView.getItems().add(article.getTitle()); // Add the title to the list
+                    break; // Break to avoid adding the same article multiple times
+                }
+            }
+        }
+    }
+
+    // Set up the scene for articles display
+    Scene scene = new Scene(articlesListView, 400, 300);
+    articlesStage.setScene(scene);
+    articlesStage.show();
 }
 
 public static void main(String[] args) {
