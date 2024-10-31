@@ -800,7 +800,7 @@ private void showEditArticleDialog(String selectedArticle) {
     // Get the current article object
     Article article = articles.get(selectedArticle);
 
-    // Create input fields for article attributes
+    TextField levelField = new TextField(article.getLevel());
     TextField titleField = new TextField(article.getTitle()); // Title input
     TextField descriptionField = new TextField(article.getDescription()); // Description input
     TextField keywordsField = new TextField(String.join(", ", article.getKeywords())); // Keywords input
@@ -814,6 +814,8 @@ private void showEditArticleDialog(String selectedArticle) {
     Button submitButton = new Button("Submit");
     submitButton.setOnAction(e -> {
         // Manually update each field of the article
+    	article.setId(article.getId());
+    	article.setLevel(levelField.getText());
         article.setTitle(titleField.getText()); // Update title
         article.setDescription(descriptionField.getText()); // Update description
         article.setKeywords(new ArrayList<>(Arrays.asList(keywordsField.getText().split(",\\s*")))); // Update keywords
@@ -823,13 +825,16 @@ private void showEditArticleDialog(String selectedArticle) {
         article.setGroups(new ArrayList<>(Arrays.asList(groupsField.getText().split(",\\s*")))); // Update groups
         article.setReferences(new ArrayList<>(Arrays.asList(referencesField.getText().split(",\\s*")))); // Update references
         
+        articles.remove(selectedArticle);
+        articles.put(titleField.getText(), article);
         // Print the updated article
         System.out.println("Updated article: " + article.getTitle());
         editArticleStage.close(); // Close the editing dialog
     });
 
     // Add elements to the layout
-    layout.getChildren().addAll(articleLabel, 
+    layout.getChildren().addAll(articleLabel,
+    							  new Label("Level:"), levelField,
                                   new Label("Title:"), titleField,
                                   new Label("Description:"), descriptionField,
                                   new Label("Keywords (comma-separated):"), keywordsField,
@@ -932,8 +937,9 @@ private void showManageArticlesPage(Stage primaryStage) {
 
     // Populate the ListView with article data
     for (String articleName : articles.keySet()) {
-    	Article article = articles.get(articleName); 
-        articleListView.getItems().add(""+articleName); // Add articles to the ListView
+    	Article article = articles.get(articleName);
+    	String title = article.getTitle();
+        articleListView.getItems().add(""+title); // Add articles to the ListView
     }
 
     // Buttons for managing articles
