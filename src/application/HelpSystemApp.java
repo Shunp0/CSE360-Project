@@ -1191,7 +1191,10 @@ private void restoreArticles(String filename) {
             List<String> keywords = new ArrayList<>();
             List<String> references = new ArrayList<>();
             List<String> groups = new ArrayList<>();
-
+            
+            if (result.get() == replaceButton) {
+            	articles.clear();
+            }
             while ((line = reader.readLine()) != null) {
                 if (line.startsWith("ID: ")) {
                     id = line.substring(4).trim();
@@ -1223,7 +1226,6 @@ private void restoreArticles(String filename) {
                             articles.put(title, article); // Add only if no matching long ID exists
                         }
                     } else if (result.get() == replaceButton) {
-                    	articles.clear();
                         articles.put(title, article);
                     }
 
