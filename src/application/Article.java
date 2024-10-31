@@ -9,7 +9,7 @@ import java.util.List;
  * <p> Description: This class models a help article in the system, containing relevant attributes 
  * such as title, description, body, keywords, and grouping identifiers. </p>
  *
- * @version 1.00 10-30-2024
+ * @version 1.00 10-30-2024 Phase 2
  */
 public class Article {
     private long id; // Unique identifier for the article
