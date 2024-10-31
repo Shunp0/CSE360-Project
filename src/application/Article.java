@@ -3,6 +3,14 @@ package application;
 import java.util.ArrayList;
 import java.util.List;
 
+/*******
+ * <p> Article Class </p>
+ * 
+ * <p> Description: This class models a help article in the system, containing relevant attributes 
+ * such as title, description, body, keywords, and grouping identifiers. </p>
+ *
+ * @version 1.00 10-30-2024
+ */
 public class Article {
     private long id; // Unique identifier for the article
     private String level; // Level of the article (e.g., beginner, intermediate)
@@ -26,6 +34,9 @@ public class Article {
     }
 
     // Getters and Setters
+    public void setId(long ID) {
+    	this.id = ID;
+    }
     public long getId() {
         return id;
     }
