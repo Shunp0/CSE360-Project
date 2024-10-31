@@ -32,7 +32,7 @@ public class HelpSystemApp extends Application {
     private Map<String, Article> articles = new HashMap<>();
     private Map<String, String> invitationCodes = new HashMap<>(); // Store invite codes
     private boolean isFirstUser = true; // Is first user
-    private User currentUser; // Whoever's logged in right now
+    private User currentUser;
     private Article helpSystem;
 
     // For handling password reset tokens and expiration times
@@ -43,17 +43,16 @@ public class HelpSystemApp extends Application {
     public void start(Stage primaryStage) {
         primaryStage.setTitle("CSE 360 Help System"); // Set window title
 
-        // Initial Login/Registration Scene setup
-        GridPane grid = new GridPane();
-        grid.setPadding(new Insets(10, 10, 10, 10)); // Add some padding so things don't look crammed
+        GridPane grid = new GridPane();  // Initial Login/Registration Scene setup
+        grid.setPadding(new Insets(10, 10, 10, 10));
         grid.setVgap(8);
         grid.setHgap(10);
 
         // Username input
         Label userLabel = new Label("Username:");
-        GridPane.setConstraints(userLabel, 0, 0); // Place the label at the top left
+        GridPane.setConstraints(userLabel, 0, 0);
         TextField userInput = new TextField(); // Input field for the username
-        GridPane.setConstraints(userInput, 1, 0); // Position the input field next to the label
+        GridPane.setConstraints(userInput, 1, 0);
 
         // Password input
         Label passLabel = new Label("Password:");
@@ -92,7 +91,6 @@ public class HelpSystemApp extends Application {
                     if (!currentUser.isAccountSetupCompleted()) {
                         showAccountSetup(primaryStage); // Show account setup only if not completed
                     } else {
-                        // Redirect to the user's home page if account setup is completed
                     	handleLogin(currentUser, primaryStage); // Assuming at least one role exists
                     }
                 }
@@ -105,8 +103,8 @@ public class HelpSystemApp extends Application {
     Button registerButton = new Button("Register");
     GridPane.setConstraints(registerButton, 1, 5); // Place the register button
     registerButton.setOnAction(e -> {
-        String username = userInput.getText(); // Grab the username
-        String password = passInput.getText(); // Grab the password
+        String username = userInput.getText();
+        String password = passInput.getText();
 
         // If this is the first user, make them an admin
         if (isFirstUser) {
@@ -121,14 +119,14 @@ public class HelpSystemApp extends Application {
         } else {
             // Regular registration process after the first user
             String invitationCode = inviteInput.getText(); // Get the entered invite code
-            if (invitationCodes.containsKey(invitationCode)) { // Check if it's valid
+            if (invitationCodes.containsKey(invitationCode)) { // Check validity
                 if (password.equals(confirmPasswordInput.getText())) {
                     String role = invitationCodes.get(invitationCode); // Get the role tied to the code
                     User newUser = new User(username, password, role); // Create the user with that role
-                    userAccounts.put(username, newUser); // Save the user
+                    userAccounts.put(username, newUser); // Save
                     System.out.println("User registered successfully with role: " + role);
                 } else {
-                System.out.println("Passwords do not match."); // Again, handle password mismatch
+                System.out.println("Passwords do not match."); // If passwords mismatch
                 }
             } else {
             System.out.println("Invalid invitation code."); // Handle invalid invite code
@@ -150,15 +148,15 @@ primaryStage.show(); // Finally, show the stage
 // Scene for "Finish setting up your account"
 private void showAccountSetup(Stage primaryStage) {
     GridPane setupGrid = new GridPane();
-    setupGrid.setPadding(new Insets(10, 10, 10, 10)); // Add some padding for breathing room
-    setupGrid.setVgap(8); // Vertical gap between rows
-    setupGrid.setHgap(10); // Horizontal gap between columns
+    setupGrid.setPadding(new Insets(10, 10, 10, 10));
+    setupGrid.setVgap(8);
+    setupGrid.setHgap(10);
 
     // Email input field
     Label emailLabel = new Label("Email:");
-    GridPane.setConstraints(emailLabel, 0, 0); // Position the label
+    GridPane.setConstraints(emailLabel, 0, 0);
     TextField emailInput = new TextField(); // Input field for the email
-    GridPane.setConstraints(emailInput, 1, 0); // Position the input field next to the label
+    GridPane.setConstraints(emailInput, 1, 0);
 
     // First name input
     Label firstNameLabel = new Label("First Name:");
@@ -314,7 +312,7 @@ private void showAdminDashboard(Stage primaryStage) {
 
     // Extra VBox layout for padding
     VBox layout = new VBox(10);
-    layout.setPadding(new Insets(20, 20, 20, 20)); // Extra padding
+    layout.setPadding(new Insets(20, 20, 20, 20));
 
     // Logout logic that also closes the stage
     logoutButton.setOnAction(e -> {
@@ -394,8 +392,7 @@ private void showResetUserDialog() {
             user.setOneTimePassword(true); // Mark the user as having a valid OTP
             user.setOneTimePasswordExpiry(expiryTime); // Set the expiration time
             
-
-            // Notify the admin that the OTP has been set (in a real application, you might send an email)
+            // Notify the admin of the OTP
             System.out.println("One-Time Password for " + username + ": " + oneTimePassword);
             System.out.println("This OTP expires at: " + expiryTime);
         } else {
@@ -416,7 +413,7 @@ private void showResetUserDialog() {
 
 // Helper method to generate a one-time password
 private String generateOneTimePassword() {
-    // Simple example of generating a random 6-digit OTP
+    // Generating a random 6-digit OTP
     return String.valueOf((int)(Math.random() * 900000) + 100000); // Generates a number between 100000 and 999999
 }
 
@@ -425,19 +422,19 @@ private String generateOneTimePassword() {
     // Show dialog for deleting a user account
 private void showDeleteUserDialog() {
     Stage dialogStage = new Stage();
-    dialogStage.setTitle("Delete User Account"); // Set the title 
+    dialogStage.setTitle("Delete User Account");
 
     // Set up a grid layout for the delete dialog
     GridPane deleteGrid = new GridPane();
-    deleteGrid.setPadding(new Insets(10, 10, 10, 10)); // Padding
-    deleteGrid.setVgap(8); // Vertical space
-    deleteGrid.setHgap(10); // Horizontal space
+    deleteGrid.setPadding(new Insets(10, 10, 10, 10));
+    deleteGrid.setVgap(8);
+    deleteGrid.setHgap(10);
 
     // Label and input field for the username
     Label usernameLabel = new Label("Username:");
-    GridPane.setConstraints(usernameLabel, 0, 0); // Place label at the top left
+    GridPane.setConstraints(usernameLabel, 0, 0);
     TextField usernameInput = new TextField(); // Input for the username
-    GridPane.setConstraints(usernameInput, 1, 0); // Place input next to the label
+    GridPane.setConstraints(usernameInput, 1, 0);
 
     // Button to delete the user
     Button deleteButton = new Button("Delete User");
@@ -452,7 +449,7 @@ private void showDeleteUserDialog() {
             System.out.println("User not found."); // No user with that username
         }
 
-        dialogStage.close(); // Close the dialog when done
+        dialogStage.close(); // Close dialog
     });
 
     // Add all pieces to the grid
@@ -638,7 +635,7 @@ private void showManageUsersPage(Stage primaryStage) {
         instructorHomeStage.setTitle("Instructor Home Page");
 
         VBox layout = new VBox(10);
-        layout.setPadding(new Insets(20, 20, 20, 20)); // Padding
+        layout.setPadding(new Insets(20, 20, 20, 20));
 
         Label welcomeLabel = new Label("Welcome, Instructor!");
         Button manageArticlesButton = new Button("Manage Articles");
@@ -682,9 +679,9 @@ private void showManageUsersPage(Stage primaryStage) {
         // Add everything to the layout
         inviteGrid.getChildren().addAll(roleLabel, roleInput, generateButton);
         // Set up the scene and display it
-        Scene scene = new Scene(inviteGrid, 400, 300); // Set size
-        dialogStage.setScene(scene); // Set the scene on the stage
-        dialogStage.show(); // Show stage
+        Scene scene = new Scene(inviteGrid, 400, 300);
+        dialogStage.setScene(scene);
+        dialogStage.show();
     }
     else
     if (user.getRoles().size() == 1) {
@@ -695,15 +692,16 @@ private void showManageUsersPage(Stage primaryStage) {
         showRoleSelectionDialog(user, primaryStage);
     }
 }
-
+    // Role Selection Dialog Method
     private void showRoleSelectionDialog(User user, Stage primaryStage) {
         Stage roleDialogStage = new Stage();
         roleDialogStage.setTitle("Select Role");
 
+        // Create rolegrid
         GridPane roleGrid = new GridPane();
-        roleGrid.setPadding(new Insets(10, 10, 10, 10)); // Add padding
-        roleGrid.setVgap(8); // Vertical space
-        roleGrid.setHgap(10); // Horizontal space
+        roleGrid.setPadding(new Insets(10, 10, 10, 10));
+        roleGrid.setVgap(8);
+        roleGrid.setHgap(10);
 
         // Label for role selection
         Label roleLabel = new Label("Select Role:");
@@ -729,7 +727,7 @@ private void showManageUsersPage(Stage primaryStage) {
     roleGrid.getChildren().addAll(roleLabel, roleSelectionBox, submitButton);
 
     // Set up and show the role selection dialog
-    Scene roleScene = new Scene(roleGrid, 300, 150); // Set dialog size
+    Scene roleScene = new Scene(roleGrid, 300, 150);
     roleDialogStage.setScene(roleScene);
     roleDialogStage.show();
 }
@@ -766,9 +764,9 @@ private String generateResetToken() {
 // Show the role's page
 private void showRoleSpecificPage(Stage primaryStage, String role) {
     GridPane roleGrid = new GridPane();
-    roleGrid.setPadding(new Insets(10, 10, 10, 10)); // Add padding
-    roleGrid.setVgap(8); // Vertical spacing
-    roleGrid.setHgap(10); // Horizontal spacing
+    roleGrid.setPadding(new Insets(10, 10, 10, 10));
+    roleGrid.setVgap(8);
+    roleGrid.setHgap(10);
 
     // Label to welcome the user based on their role
     Label rolePageLabel = new Label("Welcome to the " + role + " Page!");
@@ -800,17 +798,16 @@ private void showEditArticleDialog(String selectedArticle) {
     Label articleLabel = new Label("Editing article: " + selectedArticle);
 
     // Get the current article object
-    Article article = articles.get(selectedArticle); // Assuming articleList is a map of articles
+    Article article = articles.get(selectedArticle);
 
     // Create input fields for article attributes
     TextField titleField = new TextField(article.getTitle()); // Title input
     TextField descriptionField = new TextField(article.getDescription()); // Description input
     TextField keywordsField = new TextField(String.join(", ", article.getKeywords())); // Keywords input
     TextArea bodyTextArea = new TextArea(article.getBody()); // Body input as a TextArea
-
-    // Input for groups
+    
     TextField groupsField = new TextField(String.join(", ", article.getGroups())); // Groups input
-    // Input for references
+    
     TextField referencesField = new TextField(String.join(", ", article.getReferences())); // References input
 
     // Button to submit the article changes
@@ -826,7 +823,7 @@ private void showEditArticleDialog(String selectedArticle) {
         article.setGroups(new ArrayList<>(Arrays.asList(groupsField.getText().split(",\\s*")))); // Update groups
         article.setReferences(new ArrayList<>(Arrays.asList(referencesField.getText().split(",\\s*")))); // Update references
         
-        // Optionally, you could notify the user about the update
+        // Print the updated article
         System.out.println("Updated article: " + article.getTitle());
         editArticleStage.close(); // Close the editing dialog
     });
@@ -842,9 +839,9 @@ private void showEditArticleDialog(String selectedArticle) {
                                   submitButton);
 
     // Set up and show the scene for editing the article
-    Scene scene = new Scene(layout, 400, 600); // Set size for the article editing window
-    editArticleStage.setScene(scene); // Set the scene
-    editArticleStage.show(); // Show the stage
+    Scene scene = new Scene(layout, 400, 600);
+    editArticleStage.setScene(scene);
+    editArticleStage.show();
 }
 
 private void showAddArticleDialog() {
@@ -926,7 +923,7 @@ private void showManageArticlesPage(Stage primaryStage) {
     manageArticlesStage.setTitle("Manage Articles"); // Set title for the window
 
     VBox layout = new VBox(10); // Vertical layout with spacing
-    layout.setPadding(new Insets(20, 20, 20, 20)); // Padding for breathing room
+    layout.setPadding(new Insets(20, 20, 20, 20)); // Padding
 
     Label manageArticlesLabel = new Label("Manage Articles"); // Label for the top of the page
 
@@ -991,9 +988,9 @@ private void showManageArticlesPage(Stage primaryStage) {
     layout.getChildren().addAll(manageArticlesLabel, articleListView, addArticleButton, deleteArticleButton, editArticleButton, backupArticlesButton, restoreArticlesButton, listArticlesButton);
 
     // Set up the scene and display it
-    Scene scene = new Scene(layout, 500, 400); // Set size
-    manageArticlesStage.setScene(scene); // Set the scene on the stage
-    manageArticlesStage.show(); // Show stage
+    Scene scene = new Scene(layout, 500, 400);
+    manageArticlesStage.setScene(scene);
+    manageArticlesStage.show();
 }
 
 private void showAllArticles() {
@@ -1005,11 +1002,11 @@ private void showAllArticles() {
     ListView<String> articlesListView = new ListView<>();
 
     // Populate the ListView with article titles
-    articlesListView.getItems().addAll(articles.keySet()); // Assuming articles is a Map with article titles as keys
+    articlesListView.getItems().addAll(articles.keySet());
 
     // Add mouse click event handler for double-click
     articlesListView.setOnMouseClicked(event -> {
-        if (event.getClickCount() == 2) { // Check for double-click
+        if (event.getClickCount() == 2) { // Check for double click
             String selectedArticleTitle = articlesListView.getSelectionModel().getSelectedItem();
             if (selectedArticleTitle != null) {
                 showArticleDetails(selectedArticleTitle); // Show article details
@@ -1021,9 +1018,9 @@ private void showAllArticles() {
     layout.getChildren().add(articlesListView);
 
     // Set up the scene for viewing articles
-    Scene scene = new Scene(layout, 300, 400); // Set size for the articles viewing window
-    viewArticlesStage.setScene(scene); // Set the scene
-    viewArticlesStage.show(); // Show the stage
+    Scene scene = new Scene(layout, 300, 400);
+    viewArticlesStage.setScene(scene);
+    viewArticlesStage.show();
 }
 
 private void showArticleDetails(String articleTitle) {
@@ -1039,12 +1036,12 @@ private void showArticleDetails(String articleTitle) {
 
         // Display all article details except for the ID
         detailsLayout.getChildren().add(new Label("Title: " + article.getTitle()));
-        detailsLayout.getChildren().add(new Label("Level: " + article.getLevel())); // New field
-        detailsLayout.getChildren().add(new Label("Description: " + article.getDescription())); // Example field
-        detailsLayout.getChildren().add(new Label("Keywords: " + String.join(", ",article.getKeywords()))); // Example field
-        detailsLayout.getChildren().add(new Label("Body: " + article.getBody())); // Example field
-        detailsLayout.getChildren().add(new Label("References: " + String.join(", ",article.getReferences()))); // New field
-        detailsLayout.getChildren().add(new Label("Groups: " + String.join(", ", article.getGroups()))); // New field
+        detailsLayout.getChildren().add(new Label("Level: " + article.getLevel()));
+        detailsLayout.getChildren().add(new Label("Description: " + article.getDescription()));
+        detailsLayout.getChildren().add(new Label("Keywords: " + String.join(", ",article.getKeywords())));
+        detailsLayout.getChildren().add(new Label("Body: " + article.getBody()));
+        detailsLayout.getChildren().add(new Label("References: " + String.join(", ",article.getReferences())));
+        detailsLayout.getChildren().add(new Label("Groups: " + String.join(", ", article.getGroups())));
 
         // Set up the scene for article details
         Scene detailsScene = new Scene(detailsLayout, 400, 300); // Set size for the details window
@@ -1126,7 +1123,7 @@ private void backupArticles(String filename, List<String> selectedGroups) {
             }
         }
         System.out.println("Backup completed successfully to " + filename);
-    } catch (IOException e) {
+    } catch (IOException e) { // Throw catch
         System.err.println("Error during backup: " + e.getMessage());
     }
 }
@@ -1183,7 +1180,7 @@ private void restoreArticles(String filename) {
         }
 
         try (BufferedReader reader = new BufferedReader(new FileReader(backupFile))) {
-            String line;
+            String line; // Reader for the file
             String id = null, level = null, title = null, description = null, body = null;
             List<String> keywords = new ArrayList<>();
             List<String> references = new ArrayList<>();
@@ -1242,6 +1239,7 @@ private void restoreArticles(String filename) {
     }
 }
 
+    // Method to display an alert message
 private void showAlert(String title, String message) {
     Alert alert = new Alert(Alert.AlertType.INFORMATION);
     alert.setTitle(title);
