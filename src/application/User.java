@@ -1,6 +1,7 @@
 package application;
 
 import java.util.ArrayList;
+
 import java.util.List;
 import java.time.LocalDateTime;
 
@@ -29,6 +30,7 @@ public class User {
     private byte[] passwordHash; // To store hashed password
     private LocalDateTime oneTimePasswordExpiry; // Expiry time for one-time password
     private boolean accountSetupCompleted;
+    private SpecialAccessGroup specialAccessGroup;
 
     // Default Constructor: Initializes a new user object with empty or default values
     public User() {
@@ -201,5 +203,22 @@ public class User {
     public void setRoles(List<String> roles) {
         this.roles.clear(); // Clear existing roles
         this.roles.addAll(roles); // Add new roles
+    }
+    public boolean isInstructor() {
+        return roles.contains("Instructor");
+    }
+
+    public boolean isStudent() {
+        return roles.contains("Student");
+    }
+
+    public void setSpecialAccessGroup(SpecialAccessGroup group) {
+        this.specialAccessGroup = group;
+    }
+
+    public boolean canViewArticle(Article article) {
+        if (specialAccessGroup == null) return false;
+        // Instructors or students with permission can view the body
+        return (specialAccessGroup.canInstructorViewBody(this) || specialAccessGroup.canStudentViewBody(this));
     }
 }
