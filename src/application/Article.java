@@ -3,14 +3,11 @@ package application;
 import java.util.ArrayList;
 import java.util.List;
 
-/*******
- * <p> Article Class </p>
- * 
- * <p> Description: This class models a help article in the system, containing relevant attributes 
- * such as title, description, body, keywords, and grouping identifiers. </p>
- *
- * @version 1.00 10-30-2024
- */
+import javax.crypto.Cipher;
+import javax.crypto.spec.SecretKeySpec;
+import java.util.Base64;
+import java.util.List;
+import java.nio.charset.StandardCharsets;
 public class Article {
     private long id; // Unique identifier for the article
     private String level; // Level of the article (e.g., beginner, intermediate)
@@ -20,6 +17,8 @@ public class Article {
     private String body; // Body content of the article
     private List<String> references; // Links to reference materials
     private List<String> groups; // Groups the article belongs to
+    private boolean encrypted;
+    private static final String encryptionKey = "1234567890123456";
 
     // Constructor
     public Article(long id, String level, String title, String description, List<String> keywords, String body, List<String> references, List<String> groups) {
@@ -31,6 +30,7 @@ public class Article {
         this.body = body;
         this.references = references;
         this.groups = groups;
+        this.encrypted = false;
     }
 
     // Getters and Setters
@@ -73,12 +73,52 @@ public class Article {
         this.keywords = keywords;
     }
 
-    public String getBody() {
-        return body;
+
+    public void encryptBody() {
+        try {
+            SecretKeySpec secretKey = new SecretKeySpec(encryptionKey.getBytes(), "AES");
+
+            // Set up the AES cipher in encryption mode
+            Cipher cipher = Cipher.getInstance("AES");
+            cipher.init(Cipher.ENCRYPT_MODE, secretKey);
+
+            byte[] encryptedBytes = cipher.doFinal(body.getBytes(StandardCharsets.UTF_8));
+
+            // Store the encrypted body as a Base64 string
+            this.body = Base64.getEncoder().encodeToString(encryptedBytes);
+            this.encrypted = true;  // Mark as encrypted
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
-    public void setBody(String body) {
-        this.body = body;
+    public String getBody() {
+        if (encrypted) {
+            return decryptBody();
+        }
+        return body;
+    }
+    
+    public void setBody(String body)
+    {
+    	this.body = body;
+    }
+
+    public String decryptBody() {
+        try {
+            SecretKeySpec secretKey = new SecretKeySpec(encryptionKey.getBytes(), "AES");
+
+            Cipher cipher = Cipher.getInstance("AES");
+            cipher.init(Cipher.DECRYPT_MODE, secretKey);
+
+            byte[] decodedBytes = Base64.getDecoder().decode(body);
+            byte[] decryptedBytes = cipher.doFinal(decodedBytes);
+
+            return new String(decryptedBytes, StandardCharsets.UTF_8);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return "Error decrypting content.";
+        }
     }
 
     public List<String> getReferences() {
