@@ -201,14 +201,14 @@ private void showAccountSetup(Stage primaryStage) {
     setupGrid.getChildren().addAll(emailLabel, emailInput, firstNameLabel, firstNameInput, middleNameLabel, middleNameInput, lastNameLabel, lastNameInput, preferredNameLabel, preferredNameInput, finishButton);
 
     // Set up the scene and display it
-    Scene setupScene = new Scene(setupGrid, 400, 300); // Slightly larger window here
+    Scene setupScene = new Scene(setupGrid, 400, 300); // Bigger window here
     primaryStage.setScene(setupScene); // Show the setup scene
 }
 
 
     // Scene for Role Selection
 private void showRoleSelection(Stage primaryStage) {
-    // If the user has only one role, no need to ask—just redirect
+    // If the user has only one role just redirect
     if (currentUser.getRoles().size() == 1) {
         String selectedRole = currentUser.getRoles().get(0); // Get the single role
         System.out.println("Redirecting to role-specific page for role: " + selectedRole);
@@ -288,16 +288,16 @@ private void showAdminDashboard(Stage primaryStage) {
     manageUsersButton.setOnAction(e -> showManageUsersPage(primaryStage)); // Go to manage users page
     
     Button manageArticlesButton = new Button("Manage Articles");
-    GridPane.setConstraints(manageArticlesButton, 0, 6); // Position the manage users button
-    manageArticlesButton.setOnAction(e -> showManageArticlesPage(primaryStage)); // Go to manage users page
+    GridPane.setConstraints(manageArticlesButton, 0, 6); // Position the manage articles button
+    manageArticlesButton.setOnAction(e -> showManageArticlesPage(primaryStage)); // Go to manage articles page
     
     Button manageGroupsButton = new Button("Manage Special Access Groups");
-    GridPane.setConstraints(manageGroupsButton, 0, 7);
-    manageGroupsButton.setOnAction(e -> showSpecialAccessGroupDialog());
+    GridPane.setConstraints(manageGroupsButton, 0, 7); // Position the manage groups button
+    manageGroupsButton.setOnAction(e -> showSpecialAccessGroupDialog()); // Go to special access group page
     
     Button manageGenGroupsButton = new Button("Manage General Groups");
-    GridPane.setConstraints(manageGenGroupsButton, 0, 8);
-    manageGenGroupsButton.setOnAction(e -> showGroupDialog());
+    GridPane.setConstraints(manageGenGroupsButton, 0, 8); // Position the general groups button
+    manageGenGroupsButton.setOnAction(e -> showGroupDialog()); // Go to general access group page
 
     // Logout button to exit the admin session
     Button logoutButton = new Button("Logout");
@@ -348,7 +348,7 @@ private void showInviteUserDialog() {
         GridPane.setConstraints(generateButton, 1, 2);
         generateButton.setOnAction(e -> {
             String role = roleInput.getText().toUpperCase();
-            if (!role.equals("ADMIN") && !role.equals("STUDENT") && !role.equals("INSTRUCTOR")) {
+            if (!role.equals("ADMIN") && !role.equals("STUDENT") && !role.equals("INSTRUCTOR")) { // Check to ensure balid role
                 System.out.println("Invalid role entered.");
                 return;
             }
@@ -360,7 +360,7 @@ private void showInviteUserDialog() {
         });
         inviteGrid.getChildren().addAll(roleLabel, roleInput, inviteCodeLabel, inviteCodeOutput, generateButton);
 
-        Scene dialogScene = new Scene(inviteGrid, 400, 200);
+        Scene dialogScene = new Scene(inviteGrid, 400, 200); // Set up invitation scene
         dialogStage.setScene(dialogScene);
         dialogStage.show();
     }
@@ -466,9 +466,9 @@ private void showDeleteUserDialog() {
     dialogStage.setScene(dialogScene); // Display the scene
     dialogStage.show(); // Show the dialog
 }
-
-private void showStudentHomePage(Stage primaryStage) {
-    Stage studentHomeStage = new Stage();
+// Student home page method
+private void showStudentHomePage(Stage primaryStage) { 
+    Stage studentHomeStage = new Stage(); // Set the stage
     studentHomeStage.setTitle("Student Home Page");
 
     VBox layout = new VBox(10);
@@ -476,7 +476,7 @@ private void showStudentHomePage(Stage primaryStage) {
 
     Label welcomeLabel = new Label("Welcome, Student!");
 
-    // Buttons for enhanced functionalities
+    // Buttons for new features
     Button quitButton = new Button("Quit");
     quitButton.setOnAction(e -> studentHomeStage.close()); // Quit application
 
@@ -492,23 +492,22 @@ private void showStudentHomePage(Stage primaryStage) {
     Button viewSpecialAccessArticlesButton = new Button("View Special Access Articles");
     viewSpecialAccessArticlesButton.setOnAction(e -> showSpecialAccessArticles(primaryStage));
 
-
+	// Add new buttons to layout
     layout.getChildren().addAll(welcomeLabel, quitButton, sendGenericMessageButton, 
-                                sendSpecificMessageButton, searchArticlesButton, viewSpecialAccessArticlesButton);
+                                sendSpecificMessageButton, searchArticlesButton, viewSpecialAccessArticlesButton); 
 
     Scene scene = new Scene(layout, 400, 300);
-    studentHomeStage.setScene(scene);
+    studentHomeStage.setScene(scene); // Display
     studentHomeStage.show();
 }
 
 private void showSpecialAccessArticles(Stage primaryStage) {
-    // Assuming you have a way to get the current student (currentUser)
     User currentStudent = currentUser;
 
     // Create a list of special access groups where the student has permission to view article bodies
     List<SpecialAccessGroup> accessibleGroups = getAccessibleSpecialAccessGroupsForStudent(currentStudent);
 
-    if (accessibleGroups.isEmpty()) {
+    if (accessibleGroups.isEmpty()) { // Special Check
         showAlert("Access Denied", "You are not a part of any special access groups.");
         return;
     }
@@ -540,13 +539,13 @@ private void showSpecialAccessArticles(Stage primaryStage) {
         }
     });
 
-    VBox layout = new VBox(10);
+    VBox layout = new VBox(10); // New Vbox
     layout.setPadding(new Insets(20, 20, 20, 20));
 
-    layout.getChildren().addAll(new Label("Select an Article to View Body:"), articleListView, viewBodyButton);
+    layout.getChildren().addAll(new Label("Select an Article to View Body:"), articleListView, viewBodyButton); // Add buttons
 
     Scene scene = new Scene(layout, 400, 400);
-    Stage stage = new Stage();
+    Stage stage = new Stage(); // Display
     stage.setTitle("Special Access Articles");
     stage.setScene(scene);
     stage.show();
@@ -955,23 +954,18 @@ private void showAddArticleDialog() {
     Label titleLabel = new Label("Enter Article Title:");
     TextField titleInput = new TextField(); // Input for article title
 
-    // Description input
     Label descriptionLabel = new Label("Enter Article Description:");
     TextField descriptionInput = new TextField(); // Input for article description
 
-    // Keywords input
     Label keywordsLabel = new Label("Enter Keywords (comma-separated):");
     TextField keywordsInput = new TextField(); // Input for keywords
 
-    // Body input
     Label bodyLabel = new Label("Enter Article Body:");
     TextArea bodyInput = new TextArea(); // Input for article body
 
-    // Groups input
     Label groupsLabel = new Label("Enter Groups (comma-separated):");
     TextField groupsInput = new TextField(); // Input for groups
 
-    // References input
     Label referencesLabel = new Label("Enter References (comma-separated):");
     TextField referencesInput = new TextField(); // Input for references
 
@@ -991,9 +985,9 @@ private void showAddArticleDialog() {
             Random random = new Random();
             long id = random.nextLong();
             Article newArticle = new Article(id, level, title, description, keywords, body, references, groups); // Create new article
-            articles.put(title, newArticle); // Assuming articleList is a map of article
+            articles.put(title, newArticle); 
             System.out.println("Added article: " + title);
-            addArticleStage.close(); // Close the dialog
+            addArticleStage.close();
         } else {
             System.out.println("Title and description cannot be empty.");
         }
@@ -1009,9 +1003,9 @@ private void showAddArticleDialog() {
                                   submitButton);
 
     // Set up and show the scene for adding a new article
-    Scene scene = new Scene(layout, 400, 500); // Set size for the article adding window
-    addArticleStage.setScene(scene); // Set the scene
-    addArticleStage.show(); // Show the stage
+    Scene scene = new Scene(layout, 400, 500);
+    addArticleStage.setScene(scene); // Display
+    addArticleStage.show();
 }
 
 
@@ -1020,7 +1014,7 @@ private void showManageArticlesPage(Stage primaryStage) {
     Stage manageArticlesStage = new Stage();
     manageArticlesStage.setTitle("Manage Articles"); // Set title for the window
 
-    VBox layout = new VBox(10); // Vertical layout with spacing
+    VBox layout = new VBox(10); // Vertical layout
     layout.setPadding(new Insets(20, 20, 20, 20)); // Padding
 
     Label manageArticlesLabel = new Label("Manage Articles"); // Label for the top of the page
@@ -1148,7 +1142,7 @@ private void showSpecialBackupDialog() {
 
         // Dialog for selecting special access groups
         ListView<String> groupListView = new ListView<>();
-        groupListView.getItems().addAll(getAllSpecialAccessGroups()); // Assuming this method returns all special access groups
+        groupListView.getItems().addAll(getAllSpecialAccessGroups());
         groupListView.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
 
         // VBox to hold both dialogs
@@ -1175,13 +1169,14 @@ private void showSpecialBackupDialog() {
     }
 }
 
+// Method for backing up special access groups
 private void backupSpecialAccessGroups(String filename, List<String> selectedGroups) {
     try (BufferedWriter writer = new BufferedWriter(new FileWriter(filename))) {
         for (String groupName : selectedGroups) {
             SpecialAccessGroup group = specialAccessGroups.get(groupName); // Get the selected group by name
             if (group == null) continue; // Skip if the group does not exist
 
-            for (Article article : group.getArticles()) {
+            for (Article article : group.getArticles()) { // Write to file
                 writer.write("ID: " + article.getId());
                 writer.newLine();
                 writer.write("Level: " + article.getLevel());
@@ -1207,13 +1202,12 @@ private void backupSpecialAccessGroups(String filename, List<String> selectedGro
         }
 
         System.out.println("Backup of special access groups completed successfully to " + filename);
-    } catch (IOException e) {
+    } catch (IOException e) { // Catch exception
         System.err.println("Error during backup: " + e.getMessage());
     }
 }
 
-
-
+// Method for backing up articles
 private void backupArticles(String filename, List<String> selectedGroups) {
     try (BufferedWriter writer = new BufferedWriter(new FileWriter(filename))) {
         for (Map.Entry<String, Article> entry : articles.entrySet()) {
@@ -1250,10 +1244,10 @@ private void backupArticles(String filename, List<String> selectedGroups) {
 
 
 private List<String> getAllGroups() {
-    Set<String> groupSet = new HashSet<>(); // Use a Set to avoid duplicates
+    Set<String> groupSet = new HashSet<>(); // Using a Set to avoid duplicates
 
     // Iterate through each article and add its groups to the set
-    for (Article article : articles.values()) { // Assuming articles is a Map<Long, Article>
+    for (Article article : articles.values()) { // Articles is a Map<Long, Article>
         List<String> groups = article.getGroups(); // Get the list of groups for the article
         if (groups != null) {
             groupSet.addAll(groups); // Add all groups to the set
@@ -1268,7 +1262,7 @@ private List<String> getAllSpecialAccessGroups() {
     Set<String> specialGroupSet = new HashSet<>(); // Use a Set to avoid duplicates
 
     // Iterate through each special access group and add its name to the set
-    for (SpecialAccessGroup group : specialAccessGroups.values()) { // Assuming specialAccessGroups is a Map<String, SpecialAccessGroup>
+    for (SpecialAccessGroup group : specialAccessGroups.values()) { // specialAccessGroups is a Map<String, SpecialAccessGroup>
         specialGroupSet.add(group.getGroupName()); // Add the group name to the set
     }
 
@@ -1285,12 +1279,13 @@ private void showRestoreDialog() {
     dialog.setContentText("Filename:");
     Optional<String> result = dialog.showAndWait();
 
-    if (result.isPresent()) {
+    if (result.isPresent()) { // If true, restore
         String filename = result.get();
         restoreArticles(filename);
     }
 }
 
+// Method for showing special restored dialog
 private void showSpecialRestoreDialog(SpecialAccessGroup group) {
     // Input dialog for restore filename
     TextInputDialog dialog = new TextInputDialog("special_access_backup.txt");
@@ -1305,7 +1300,7 @@ private void showSpecialRestoreDialog(SpecialAccessGroup group) {
     }
 }
 
-
+// Method for restoring articles
 private void restoreArticles(String filename) {
     File backupFile = new File(filename);
     
@@ -1316,11 +1311,11 @@ private void restoreArticles(String filename) {
         alert.setHeaderText("Do you want to merge or replace existing articles?");
         alert.setContentText("Choose your option:");
 
-        ButtonType mergeButton = new ButtonType("Merge");
+        ButtonType mergeButton = new ButtonType("Merge"); // Buttons
         ButtonType replaceButton = new ButtonType("Replace");
         ButtonType cancelButton = new ButtonType("Cancel");
 
-        alert.getButtonTypes().setAll(mergeButton, replaceButton, cancelButton);
+        alert.getButtonTypes().setAll(mergeButton, replaceButton, cancelButton); // Set buttons
 
         Optional<ButtonType> result = alert.showAndWait();
         if (result.isPresent() && result.get() == cancelButton) {
@@ -1334,7 +1329,7 @@ private void restoreArticles(String filename) {
             List<String> references = new ArrayList<>();
             List<String> groups = new ArrayList<>();
             
-            if (result.get() == replaceButton) {
+            if (result.get() == replaceButton) { 
             	articles.clear();
             }
             while ((line = reader.readLine()) != null) {
@@ -1355,7 +1350,7 @@ private void restoreArticles(String filename) {
                 } else if (line.startsWith("Groups: ")) {
                     groups = Arrays.asList(line.substring(8).split(";"));
                 } else if (line.equals("-----")) {
-                    // Create a new Article object from parsed data
+                    // Create a new Article object from the input data
                     long articleId = Long.parseLong(id);
                     Article article = new Article(articleId, level, title, description, keywords, body, references, groups);
                     
@@ -1379,7 +1374,7 @@ private void restoreArticles(String filename) {
                 }
             }
             showAlert("Restore Successful", "Articles restored successfully from " + backupFile.getName());
-        } catch (IOException e) {
+        } catch (IOException e) { // Exception catches
             showAlert("Error", "An error occurred while reading the backup file.");
         } catch (NumberFormatException e) {
             showAlert("Error", "Invalid ID format in the backup file.");
@@ -1403,7 +1398,7 @@ private void restoreSpecialArticles(String filename, SpecialAccessGroup group) {
         ButtonType replaceButton = new ButtonType("Replace");
         ButtonType cancelButton = new ButtonType("Cancel");
 
-        alert.getButtonTypes().setAll(mergeButton, replaceButton, cancelButton);
+        alert.getButtonTypes().setAll(mergeButton, replaceButton, cancelButton); // Set buttons
 
         Optional<ButtonType> result = alert.showAndWait();
         if (result.isPresent() && result.get() == cancelButton) {
@@ -1458,7 +1453,6 @@ private void restoreSpecialArticles(String filename, SpecialAccessGroup group) {
                         System.out.println("Article replaced in special access group: " + group.getGroupName());
                     }
 
-
                     // Reset variables for next article
                     id = level = title = description = body = null;
                     keywords = new ArrayList<>();
@@ -1467,7 +1461,7 @@ private void restoreSpecialArticles(String filename, SpecialAccessGroup group) {
                 }
             }
             showAlert("Restore Successful", "Articles restored successfully from " + backupFile.getName());
-        } catch (IOException e) {
+        } catch (IOException e) { // Throw catch
             showAlert("Error", "An error occurred while reading the backup file.");
         } catch (NumberFormatException e) {
             showAlert("Error", "Invalid ID format in the backup file.");
@@ -1486,6 +1480,7 @@ private void showAlert(String title, String message) {
     alert.showAndWait();
 }
 
+// Method for listing all articles
 private void showArticleListingDialog() {
     // Create a new stage for listing articles
     Stage listArticlesStage = new Stage();
@@ -1517,6 +1512,7 @@ private void showArticleListingDialog() {
     listArticlesStage.show();
 }
 
+// Method for listing specific articles
 private void listArticles(List<String> selectedGroups) {
     // Create a new stage to show articles
     Stage articlesStage = new Stage();
@@ -1549,6 +1545,7 @@ private void listArticles(List<String> selectedGroups) {
     articlesStage.show();
 }
 
+// Method for group dialog
 private void showGroupDialog() {
     Stage dialogStage = new Stage();
     dialogStage.setTitle("General Groups");
@@ -1566,20 +1563,21 @@ private void showGroupDialog() {
     Button manageGroupButton = new Button("Manage Selected Group");
 
     addGroupButton.setOnAction(e -> createGroupDialog());
-    manageGroupButton.setOnAction(e -> {
+    manageGroupButton.setOnAction(e -> { // Combobox for selecting the group
         String selectedGroup = groupComboBox.getValue();
         if (selectedGroup != null) {
             manageGroupDialog(selectedGroup, currentUser);
         }
     });
 
-    layout.getChildren().addAll(new Label("General Groups"), groupComboBox, addGroupButton, manageGroupButton);
+    layout.getChildren().addAll(new Label("General Groups"), groupComboBox, addGroupButton, manageGroupButton); // Add buttons
 
     Scene scene = new Scene(layout, 300, 200);
-    dialogStage.setScene(scene);
+    dialogStage.setScene(scene); // Display
     dialogStage.show();
 }
 
+// Method for showing special access groups
 private void showSpecialAccessGroupDialog() {
     Stage dialogStage = new Stage();
     dialogStage.setTitle("Special Access Groups");
@@ -1603,14 +1601,15 @@ private void showSpecialAccessGroupDialog() {
             manageSpecialAccessGroupDialog(selectedGroup);
         }
     });
-
-    layout.getChildren().addAll(new Label("Special Access Groups"), groupComboBox, addGroupButton, manageGroupButton);
+	// Add elements
+    layout.getChildren().addAll(new Label("Special Access Groups"), groupComboBox, addGroupButton, manageGroupButton); 
 
     Scene scene = new Scene(layout, 300, 200);
-    dialogStage.setScene(scene);
+    dialogStage.setScene(scene); // Display
     dialogStage.show();
 }
 
+// Method for creating group dialog
 private void createGroupDialog() {
     Stage createGroupStage = new Stage();
     createGroupStage.setTitle("Create General Group");
@@ -1618,10 +1617,10 @@ private void createGroupDialog() {
     VBox layout = new VBox(10);
     layout.setPadding(new Insets(20));
 
-    TextField groupNameField = new TextField();
+    TextField groupNameField = new TextField(); // Input field
     groupNameField.setPromptText("Enter Group Name");
 
-    Button createButton = new Button("Create");
+    Button createButton = new Button("Create"); // Logic create button
     createButton.setOnAction(e -> {
         String groupName = groupNameField.getText();
         if (!groupName.isEmpty() && !generalGroups.containsKey(groupName)) {
@@ -1633,13 +1632,14 @@ private void createGroupDialog() {
         }
     });
 
-    layout.getChildren().addAll(new Label("Group Name:"), groupNameField, createButton);
+    layout.getChildren().addAll(new Label("Group Name:"), groupNameField, createButton); // Add field and button
 
     Scene scene = new Scene(layout, 300, 150);
-    createGroupStage.setScene(scene);
+    createGroupStage.setScene(scene); // Display
     createGroupStage.show();
 }
 
+// Method for creating special access gropups
 private void createSpecialAccessGroupDialog() {
     Stage createGroupStage = new Stage();
     createGroupStage.setTitle("Create Special Access Group");
@@ -1647,10 +1647,10 @@ private void createSpecialAccessGroupDialog() {
     VBox layout = new VBox(10);
     layout.setPadding(new Insets(20));
 
-    TextField groupNameField = new TextField();
+    TextField groupNameField = new TextField(); // Input field
     groupNameField.setPromptText("Enter Group Name");
 
-    Button createButton = new Button("Create");
+    Button createButton = new Button("Create"); // Standard button
     createButton.setOnAction(e -> {
         String groupName = groupNameField.getText();
         if (!groupName.isEmpty() && !specialAccessGroups.containsKey(groupName)) {
@@ -1662,13 +1662,14 @@ private void createSpecialAccessGroupDialog() {
         }
     });
 
-    layout.getChildren().addAll(new Label("Group Name:"), groupNameField, createButton);
+    layout.getChildren().addAll(new Label("Group Name:"), groupNameField, createButton); // Add elements
 
     Scene scene = new Scene(layout, 300, 150);
-    createGroupStage.setScene(scene);
+    createGroupStage.setScene(scene); // Display
     createGroupStage.show();
 }
 
+// Method for managing groups
 private void manageGroupDialog(String groupName, User currentUser) {
     GeneralGroup group = generalGroups.get(groupName);
     if (group == null) return;
@@ -1804,7 +1805,7 @@ private void removeUserFromGroup(GeneralGroup group, String role, ListView<Strin
     }
 }
 
-
+// Method for managing special access groups
 private void manageSpecialAccessGroupDialog(String groupName) {
     SpecialAccessGroup group = specialAccessGroups.get(groupName);
     if (group == null) return;
@@ -1877,6 +1878,7 @@ private void manageSpecialAccessGroupDialog(String groupName) {
              .toArray(String[]::new)
     ));
 
+// Buttons for new viewing features
     Button addAdminWithAdminRightsButton = new Button("Add Admin (Admin Rights)");
     addAdminWithAdminRightsButton.setOnAction(e -> addInstructorWithAdminRights(group, instructorsWithViewingRightsListView));
     
@@ -1905,7 +1907,7 @@ private void manageSpecialAccessGroupDialog(String groupName) {
         }
     });
     
-    
+    // Remove instructor/admin button
     Button removeInstructorAdButton = new Button("Remove Instructor/Admin (Admin)");
     removeInstructorAdButton.setOnAction(e -> {
         String selectedInstructor = instructorsWithAdminRightsListView.getSelectionModel().getSelectedItem();
@@ -1922,6 +1924,7 @@ private void manageSpecialAccessGroupDialog(String groupName) {
         }
     });
 
+// Remove student button
     Button removeStudentButton = new Button("Remove Student");
     removeStudentButton.setOnAction(e -> {
         String selectedStudent = studentsWithViewingRightsListView.getSelectionModel().getSelectedItem();
@@ -1937,7 +1940,8 @@ private void manageSpecialAccessGroupDialog(String groupName) {
             }
         }
     });
-    
+
+// Add article Button
     Button addArticleButton = new Button("Add Article to Group");
     addArticleButton.setOnAction(e -> {
         String selectedArticleTitle = articleListView.getSelectionModel().getSelectedItem();
@@ -1958,7 +1962,7 @@ private void manageSpecialAccessGroupDialog(String groupName) {
         }
     });
     
-
+// Add student button
     Button addStudentButton = new Button("Add Student");
     addStudentButton.setOnAction(e -> addUserToGroup(group, "STUDENT"));
 
@@ -1973,6 +1977,7 @@ private void manageSpecialAccessGroupDialog(String groupName) {
         showSpecialRestoreDialog(group);
     });
 
+// Add all elements
     layout.getChildren().addAll(groupLabel,
             new Label("Articles"), articleListView, addArticleButton,
             new Label("Articles in Special Access Group"), specialGroupArticleListView, viewBodyButton,
@@ -1981,10 +1986,11 @@ private void manageSpecialAccessGroupDialog(String groupName) {
 		    new Label("Instructors/Admins (Admin Rights)"), instructorsWithAdminRightsListView, addInstructorWithAdminRightsButton, addAdminWithAdminRightsButton, removeInstructorAdButton, backupArticlesButton, restoreArticlesButton);
 		    
     Scene scene = new Scene(layout, 1000, 1000);
-    manageGroupStage.setScene(scene);
+    manageGroupStage.setScene(scene); // Display
     manageGroupStage.show();
 }
 
+// Method for adding user to group
 private void addUserToGroup(SpecialAccessGroup group, String role) {
     TextInputDialog dialog = new TextInputDialog();
     dialog.setTitle("Add " + role);
@@ -2015,14 +2021,14 @@ private void addUserToGroup(SpecialAccessGroup group, String role) {
     });
 }
 
-
+// Method for adding article to a special access group 
 public void addArticleToSpecialAccessGroup(Article article, SpecialAccessGroup group) {
-    // Add article to the special access group
-    group.addArticle(article);
+    group.addArticle(article); // Add article
     article.encryptBody();
 
     System.out.println("Article added to special access group: " + group.getGroupName());
 }
+// Method for adding an instructor that can view specific groups
 private void addInstructorWithViewingRights(SpecialAccessGroup group, ListView<String> listView) {
     TextInputDialog dialog = new TextInputDialog();
     dialog.setTitle("Add Instructor (Viewing Rights)");
@@ -2035,7 +2041,7 @@ private void addInstructorWithViewingRights(SpecialAccessGroup group, ListView<S
             if (!group.getInstructorsView().contains(user)) {
                 group.addInstructorsView(user);
                 listView.getItems().add(username);
-                System.out.println(username + " added as an instructor with viewing rights.");
+                System.out.println(username + " added as an instructor with viewing rights."); // Success
             }
         } else {
             System.out.println("User not found: " + username);
@@ -2043,6 +2049,7 @@ private void addInstructorWithViewingRights(SpecialAccessGroup group, ListView<S
     });
 }
 
+// Method for adding a student that can view specific groups
 private void addStudentWithViewingRights(SpecialAccessGroup group, ListView<String> listView) {
     TextInputDialog dialog = new TextInputDialog();
     dialog.setTitle("Add Student (Viewing Rights)");
@@ -2055,7 +2062,7 @@ private void addStudentWithViewingRights(SpecialAccessGroup group, ListView<Stri
             if (!group.getStudents().contains(user)) {
                 group.addStudent(user);
                 listView.getItems().add(username);
-                System.out.println(username + " added as a student with viewing rights.");
+                System.out.println(username + " added as a student with viewing rights."); // Success
             }
         } else {
             System.out.println("User not found: " + username);
@@ -2063,6 +2070,7 @@ private void addStudentWithViewingRights(SpecialAccessGroup group, ListView<Stri
     });
 }
 
+// Method for adding instructor with admin privileges
 private void addInstructorWithAdminRights(SpecialAccessGroup group, ListView<String> listView) {
     TextInputDialog dialog = new TextInputDialog();
     dialog.setTitle("Add Instructor/Admin (Admin Rights)");
@@ -2075,7 +2083,7 @@ private void addInstructorWithAdminRights(SpecialAccessGroup group, ListView<Str
             if (!group.getInstructorsAd().contains(user)) {
                 group.addInstructorsAd(user);
                 listView.getItems().add(username);
-                System.out.println(username + " added as an instructor/admin with admin rights.");
+                System.out.println(username + " added as an instructor/admin with admin rights."); // Success
             }
         } else {
             System.out.println("User not found: " + username);
@@ -2083,6 +2091,7 @@ private void addInstructorWithAdminRights(SpecialAccessGroup group, ListView<Str
     });
 }
 
+// Method for searching thru articles
 private void searchArticles() {
     Stage searchStage = new Stage();
     searchStage.setTitle("Search Articles");
@@ -2121,6 +2130,7 @@ private void searchArticles() {
     searchStage.show();
 }
 
+// Method for performing a search via level group or term
 private void performSearch(String level, String group, String term) {
     List<Article> filteredArticles = new ArrayList<>(articles.values());
 
@@ -2145,6 +2155,7 @@ private void performSearch(String level, String group, String term) {
     displaySearchResults(filteredArticles, group);
 }
 
+// Method for displaying results from search
 private void displaySearchResults(List<Article> articles, String activeGroup) {
     Stage resultsStage = new Stage();
     resultsStage.setTitle("Search Results");
@@ -2155,14 +2166,14 @@ private void displaySearchResults(List<Article> articles, String activeGroup) {
     Label groupLabel = new Label("Active Group: " + activeGroup);
     Label countLabel = new Label("Articles Found: " + articles.size());
 
-    ListView<String> resultsListView = new ListView<>();
+    ListView<String> resultsListView = new ListView<>(); // List all that was found
     int index = 1;
     for (Article article : articles) {
         resultsListView.getItems().add(index + ". " + article.getTitle() + " - " + article.getDescription());
         index++;
     }
 
-    Button viewArticleButton = new Button("View Article");
+    Button viewArticleButton = new Button("View Article"); // Viewing the article button
     viewArticleButton.setOnAction(e -> {
         String selectedArticle = resultsListView.getSelectionModel().getSelectedItem();
         if (selectedArticle != null) {
@@ -2176,10 +2187,11 @@ private void displaySearchResults(List<Article> articles, String activeGroup) {
     layout.getChildren().addAll(groupLabel, countLabel, resultsListView, viewArticleButton);
 
     Scene scene = new Scene(layout, 400, 500);
-    resultsStage.setScene(scene);
+    resultsStage.setScene(scene); // Display
     resultsStage.show();
 }
 
+// Method for viewing more details on an article
 private void viewArticleInDetail(Article article) {
     Stage articleStage = new Stage();
     articleStage.setTitle("Article Details: " + article.getTitle());
@@ -2195,10 +2207,11 @@ private void viewArticleInDetail(Article article) {
     layout.getChildren().addAll(titleLabel, authorLabel, keywordsLabel, bodyLabel);
 
     Scene scene = new Scene(layout, 400, 300);
-    articleStage.setScene(scene);
+    articleStage.setScene(scene); // Display
     articleStage.show();
 }
 
+// Method for generic message
 private void sendGenericMessage() {
     TextInputDialog dialog = new TextInputDialog();
     dialog.setTitle("Generic Message");
@@ -2212,6 +2225,7 @@ private void sendGenericMessage() {
     });
 }
 
+// Method for specific method
 private void sendSpecificMessage() {
     TextInputDialog dialog = new TextInputDialog();
     dialog.setTitle("Specific Message");
