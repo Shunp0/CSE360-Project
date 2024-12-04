@@ -1752,12 +1752,27 @@ private void manageGroupDialog(String groupName, User currentUser) {
 
 // Method to add a user to the group based on the role (ADMIN, INSTRUCTOR, STUDENT)
 private void addUserToGroup(GeneralGroup group, String role) {
-    TextInputDialog dialog = new TextInputDialog();
-    dialog.setTitle("Add " + role);
-    dialog.setHeaderText("Enter Username to Add as " + role);
+	System.out.print("reached");
+    Stage dialogStage = new Stage();
+    dialogStage.setTitle("Add user to group");
 
-    Optional<String> result = dialog.showAndWait();
-    result.ifPresent(username -> {
+    // Set up a grid layout for the add dialog
+    GridPane addGrid = new GridPane();
+    addGrid.setPadding(new Insets(10, 10, 10, 10));
+    addGrid.setVgap(8);
+    addGrid.setHgap(10);
+
+    // Label and input field for the username
+    Label usernameLabel = new Label("Username:");
+    GridPane.setConstraints(usernameLabel, 0, 0);
+    TextField usernameInput = new TextField(); // Input for the username
+    GridPane.setConstraints(usernameInput, 1, 0);
+
+    // Button to add the user
+    Button addButton = new Button("Add User");
+    GridPane.setConstraints(addButton, 1, 1);
+    addButton.setOnAction(e -> {
+        String username = usernameInput.getText(); 
         User user = userAccounts.get(username);
         if (user != null) {
             switch (role) {
@@ -1775,7 +1790,16 @@ private void addUserToGroup(GeneralGroup group, String role) {
         } else {
             System.out.println("User not found: " + username);
         }
+        dialogStage.close(); // Close dialog
     });
+
+    // Add all pieces to the grid
+    addGrid.getChildren().addAll(usernameLabel, usernameInput, addButton);
+
+    // Set up and show the dialog scene
+    Scene dialogScene = new Scene(addGrid, 300, 150); // Set size of the dialog
+    dialogStage.setScene(dialogScene); // Display the scene
+    dialogStage.show(); // Show the dialog
 }
 
 // Method to remove a user from the group based on their role and update ListView
@@ -1964,7 +1988,7 @@ private void manageSpecialAccessGroupDialog(String groupName) {
     
 // Add student button
     Button addStudentButton = new Button("Add Student");
-    addStudentButton.setOnAction(e -> addUserToGroup(group, "STUDENT"));
+    addStudentButton.setOnAction(e -> addUserToSpecialGroup(group, "STUDENT"));
 
     Button backupArticlesButton = new Button("Backup Articles");
     Button restoreArticlesButton = new Button("Restore Articles");
@@ -1991,7 +2015,7 @@ private void manageSpecialAccessGroupDialog(String groupName) {
 }
 
 // Method for adding user to group
-private void addUserToGroup(SpecialAccessGroup group, String role) {
+private void addUserToSpecialGroup(SpecialAccessGroup group, String role) {
     TextInputDialog dialog = new TextInputDialog();
     dialog.setTitle("Add " + role);
     dialog.setHeaderText("Enter Username to Add as " + role);
