@@ -48,6 +48,12 @@ public class User {
         this.otp = null;
         this.accountSetupCompleted = false;
     }
+    public User(String username, String password, String email, String role) {
+        this.username = username;
+        this.password = password; // In a real application, this should be hashed
+        this.email = email;
+        this.accountSetupCompleted = false;
+    }
     // Constructor for the initial user creation
     public User(String username, String password, String role) {
         this.username = username;
