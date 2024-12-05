@@ -1683,12 +1683,12 @@ private void manageGroupDialog(String groupName, User currentUser) {
     if (group == null) return;
 
     // Ensure the current user is either an admin or instructor for this group
-    boolean isAdmin = group.getAdmins().contains(currentUser);
-    boolean isInstructor = group.getInstructors().contains(currentUser);
+    boolean isAdmin = currentUser.getRoles().contains("ADMIN");
+    boolean isInstructor = currentUser.getRoles().contains("INSTRUCTOR");
 
-    if (!isAdmin && !isInstructor) {
+    if (currentUser.isStudent()) {
         showAlert("Access Denied", "You do not have permission to manage group membership.");
-        return; // If the user is neither an admin nor an instructor, exit the method
+        return;
     }
 
     Stage manageGroupStage = new Stage();
@@ -1731,7 +1731,8 @@ private void manageGroupDialog(String groupName, User currentUser) {
     Button removeStudentButton = new Button("Remove Student");
 
     // For Admins: Can add/remove Admins, Instructors, and Students
-    if (isAdmin) {
+    if(isAdmin)
+    {
         addAdminButton.setOnAction(e -> addUserToGroup(group, "ADMIN"));
         removeAdminButton.setOnAction(e -> removeUserFromGroup(group, "ADMIN", adminListView));
 
@@ -1742,8 +1743,8 @@ private void manageGroupDialog(String groupName, User currentUser) {
         removeStudentButton.setOnAction(e -> removeUserFromGroup(group, "STUDENT", studentListView));
     }
 
-    // For Instructors: Can only add/remove Students
-    if (isInstructor) {
+    else if (isInstructor)
+    {
         addStudentButton.setOnAction(e -> addUserToGroup(group, "STUDENT"));
         removeStudentButton.setOnAction(e -> removeUserFromGroup(group, "STUDENT", studentListView));
     }
@@ -1753,7 +1754,7 @@ private void manageGroupDialog(String groupName, User currentUser) {
             new Label("Instructors"), instructorListView, addInstructorButton, removeInstructorButton,
             new Label("Students"), studentListView, addStudentButton, removeStudentButton);
 
-    Scene scene = new Scene(layout, 400, 400);
+    Scene scene = new Scene(layout, 600, 600);
     manageGroupStage.setScene(scene);
     manageGroupStage.show();
 }
@@ -1877,6 +1878,23 @@ private void manageSpecialAccessGroupDialog(String groupName) {
             }
         } else {
             showAlert("No Selection", "Please select an article to view.");
+        }
+    });
+    Button deleteArticleButton = new Button("Delete Article");
+    deleteArticleButton.setOnAction(e -> {
+        String selectedTitle = specialGroupArticleListView.getSelectionModel().getSelectedItem(); // Get selected article title
+        if (selectedTitle != null) {
+            Article selectedArticle = group.getArticles().stream()
+                .filter(article -> article.getTitle().equals(selectedTitle))
+                .findFirst()
+                .orElse(null);
+
+            if (selectedArticle != null) {
+                    group.removeArticle(selectedArticle); // Remove the article from the group
+                    specialGroupArticleListView.getItems().remove(selectedTitle); // Update the ListView
+                    System.out.println("Article \"" + selectedArticle.getTitle() + "\" removed from group: " + group.getGroupName());
+                    showAlert("Article Removed", "Article \"" + selectedArticle.getTitle() + "\" has been deleted from the group.");
+        }
         }
     });
 
