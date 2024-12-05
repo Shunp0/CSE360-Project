@@ -2030,7 +2030,7 @@ private void manageSpecialAccessGroupDialog(String groupName) {
 // Add all elements
     layout.getChildren().addAll(groupLabel,
             new Label("Articles"), articleListView, addArticleButton,
-            new Label("Articles in Special Access Group"), specialGroupArticleListView, viewBodyButton,
+            new Label("Articles in Special Access Group"), specialGroupArticleListView, viewBodyButton, deleteArticleButton,
 		    new Label("Instructors/Admins (Viewing Rights)"), instructorsWithViewingRightsListView, addInstructorWithViewingRightsButton, removeInstructorViewButton,
 		    new Label("Students (Viewing Rights)"), studentsWithViewingRightsListView, addStudentWithViewingRightsButton, removeStudentButton,
 		    new Label("Instructors/Admins (Admin Rights)"), instructorsWithAdminRightsListView, addInstructorWithAdminRightsButton, addAdminWithAdminRightsButton, removeInstructorAdButton, backupArticlesButton, restoreArticlesButton);
