@@ -730,6 +730,12 @@ private void showManageUsersPage(Stage primaryStage) {
 	    Button manageSpecialGroupsButton = new Button("Manage Special Access Groups");
 	    manageSpecialGroupsButton.setOnAction(e -> showSpecialAccessGroupDialog()); // Navigate to manage special groups page
 
+	    Button manageGenGroupsButton = new Button("Manage General Groups");
+	    manageGenGroupsButton.setOnAction(e -> showGroupDialog()); // Go to general access group page
+	 
+	    Button searchArticlesButton = new Button("Search Articles");
+	    searchArticlesButton.setOnAction(e -> searchArticles());
+
 	    // Logout Button
 	    Button logoutButton = new Button("Log Out");
 	    logoutButton.setOnAction(e -> {
@@ -741,6 +747,8 @@ private void showManageUsersPage(Stage primaryStage) {
 	    layout.getChildren().addAll(welcomeLabel,
 	                                manageArticlesButton,
 	                                manageSpecialGroupsButton,
+	                                manageGenGroupsButton,
+	                                searchArticlesButton,
 	                                logoutButton);
 
 	    // Create and show the scene
